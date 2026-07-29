@@ -38,7 +38,7 @@
 
   <script src="./script.js"></script>
   <script>
-(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');const sel=encodeURIComponent('*,categories!inner(name)');let url='products?select='+sel;if(slug)url+='&categories.slug=eq.'+encodeURIComponent(slug);url+='&order=name';const p=await sbGet(url);if(!p)return;if(slug&&p.length){const cat=p[0].categories;$('#catEyebrow').textContent=cat.name.toUpperCase();$('#catTitle').textContent=cat.name}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}renderProducts(p)})();
+(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');const sel=encodeURIComponent('*,categories(name)');let url='products?select='+sel;if(slug)url+='&categories.slug=eq.'+encodeURIComponent(slug);url+='&order=name';const p=await sbGet(url);if(!p)return;if(slug&&p.length){const cat=p[0].categories;if(cat){$('#catEyebrow').textContent=cat.name.toUpperCase();$('#catTitle').textContent=cat.name}}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}renderProducts(p)})();
   </script>
 </body>
 </html>
