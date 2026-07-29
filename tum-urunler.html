@@ -38,7 +38,45 @@
 
   <script src="./script.js"></script>
   <script>
-(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');let url='products?select=*';if(slug){const cats=await sbGet("categories?select=id,name&slug=eq."+slug);if(cats&&cats.length){url+='&category_id=eq.'+cats[0].id;$('#catEyebrow').textContent=cats[0].name.toUpperCase();$('#catTitle').textContent=cats[0].name}}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}let p;try{const r=await fetch(SB_URL+'/rest/v1/'+url,{headers:SB_HEAD});if(!r.ok){$('#productGrid').innerHTML='<p style="color:red">HTTP '+r.status+'</p>';return}p=await r.json()}catch(e){$('#productGrid').innerHTML='<p style="color:red">'+e.message+'</p>';return}if(p&&p.length){renderProducts(p)}else{$('#productGrid').innerHTML='<p style="color:var(--copper)">Hen�z �r�n bulunmuyor.</p>'}})();
-  </script>
+  (async()=>{
+    const params=new URLSearchParams(location.search);
+    const slug=params.get('k');
+    let url='products?select=*';
+    if(slug){
+      const safeSlug=encodeURIComponent(slug);
+      const cats=await sbGet("categories?select=id,name&slug=eq."+safeSlug);
+      if(cats&&cats.length){
+        url+='&category_id=eq.'+cats[0].id;
+        $('#catEyebrow').textContent=cats[0].name.toUpperCase();
+        $('#catTitle').textContent=cats[0].name;
+      } else {
+        $('#productGrid').innerHTML='<p style="color:var(--copper)">Bu kategoride ürün bulunamadı.</p>';
+        $('#catEyebrow').textContent='KATEGORİ';
+        $('#catTitle').textContent='Bu kategori yok';
+        return;
+      }
+    }
+
+    let p;
+    try{
+      const r=await fetch(SB_URL+'/rest/v1/'+url,{headers:SB_HEAD});
+      if(!r.ok){
+        $('#productGrid').innerHTML='<p style="color:red">HTTP '+r.status+'</p>';
+        return
+      }
+      p=await r.json();
+    }catch(e){
+      $('#productGrid').innerHTML='<p style="color:red">'+e.message+'</p>';
+      return
+    }
+
+    console.log('Products response:', p);
+    if(p&&p.length){
+      renderProducts(p);
+    }else{
+      $('#productGrid').innerHTML='<p style="color:var(--copper)">Henüz ürün bulunmuyor.</p>';
+    }
+  })();
+    </script>
 </body>
 </html>
