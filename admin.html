@@ -233,9 +233,11 @@ let editingId = null;
 let editingType = null;
 
 async function uploadFile(fileInputId, targetInputId) {
-  const file = document.getElementById(fileInputId).files[0];
+  const inp = document.getElementById(fileInputId);
+  if (!inp) return;
+  const file = inp.files[0];
   if (!file) return;
-  const btn = document.getElementById(fileInputId).parentElement;
+  const btn = inp.parentElement;
   btn.innerHTML = '<span class="upload-spinner"></span> Sıkıştırılıyor...';
   const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = URL.createObjectURL(file) });
   const maxW = 900, maxH = 900;
@@ -253,7 +255,9 @@ async function uploadFile(fileInputId, targetInputId) {
   const { data, error } = await _sb.storage.from('bakir').upload(path, blob, { contentType: 'image/webp' });
   if (error) { say('Yükleme hatası: ' + error.message); btn.innerHTML = '<span>📷</span> Resim Seç<input type="file" accept="image/*" id="' + fileInputId + '">'; return; }
   const { data: { publicUrl } } = _sb.storage.from('bakir').getPublicUrl(data.path);
-   document.getElementById(targetInputId).value = publicUrl;
+  const tgt = document.getElementById(targetInputId);
+  if(!tgt) return;
+  tgt.value = publicUrl;
   btn.innerHTML = '<span>📷</span> Resim Seç<input type="file" accept="image/*" id="' + fileInputId + '">';
   say('Resim yüklendi (' + (blob.size / 1024).toFixed(0) + ' KB).');
 }
@@ -379,7 +383,7 @@ async function openCategoryModal(id) {
     <h3>${id ? 'Kategori Düzenle' : 'Yeni Kategori'}</h3>
     <div class="field"><label>Kategori Adı</label><input id="fCatName" value="${cat.name}"></div>
     <div class="field"><label>Grup Adı</label><input id="fCatGroup" value="${cat.group_name}" placeholder="İçecek &amp; Kahve"></div>
-    <div class="field"><label>Görsel</label><div class="upload-row"><input id="fCatImg" value="${cat.image_url || ''}" placeholder="assets/ornek.jpg"><button type="button" class="upload-btn" onclick="document.getElementById('fCatUp').click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fCatUp" onchange="uploadFile('fCatUp','fCatImg')" hidden></button></div></div>
+    <div class="field"><label>Görsel</label><div class="upload-row"><input id="fCatImg" value="${cat.image_url || ''}" placeholder="assets/ornek.jpg"><button type="button" class="upload-btn" onclick="var el=document.getElementById('fCatUp');if(el)el.click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fCatUp" onchange="uploadFile('fCatUp','fCatImg')" hidden></button></div></div>
     <div class="modal-actions">
       <button class="cancel" onclick="closeModal()">İptal</button>
       <button class="primary" id="saveCatBtn">Kaydet</button>
@@ -475,7 +479,7 @@ async function openProductModal(id) {
       <div class="field"><label>Kategori</label><select id="fProdCat">${catOptions}</select></div>
       <div class="field"><label>Rozet</label><select id="fProdBadge">${badgeOpts}</select></div>
     </div>
-    <div class="field"><label>Görsel</label><div class="upload-row"><input id="fProdImg" value="${prod.image_url || ''}" placeholder="assets/urun.jpg"><button type="button" class="upload-btn" onclick="document.getElementById('fProdUp').click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fProdUp" onchange="uploadFile('fProdUp','fProdImg')" hidden></button></div></div>
+    <div class="field"><label>Görsel</label><div class="upload-row"><input id="fProdImg" value="${prod.image_url || ''}" placeholder="assets/urun.jpg"><button type="button" class="upload-btn" onclick="var el=document.getElementById('fProdUp');if(el)el.click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fProdUp" onchange="uploadFile('fProdUp','fProdImg')" hidden></button></div></div>
     <div class="modal-actions">
       <button class="cancel" onclick="closeModal()">İptal</button>
       <button class="primary" id="saveProdBtn">Kaydet</button>
