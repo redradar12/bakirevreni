@@ -81,21 +81,8 @@ serve(async (req) => {
 
   const body = { ...payment, signature: hash }
 
-  const isSandbox = Deno.env.get('IYZICO_SANDBOX') === 'true'
-  const base = isSandbox ? 'https://sandbox-api.iyzipay.com' : 'https://api.iyzipay.com'
-
-  const res = await fetch(base + '/payment/auth', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'IYZWS ' + btoa(apiKey + ':' + secretKey),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  const result = await res.json()
-  return new Response(JSON.stringify(result), {
+  // DEBUG: return the body to see if randomString is there
+  return new Response(JSON.stringify({ debug: 'body sent', hasRandomString: !!body.randomString, body }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    status: result.status === 'success' ? 200 : 400,
   })
 })
