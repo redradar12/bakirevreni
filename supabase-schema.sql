@@ -136,6 +136,12 @@ DROP POLICY IF EXISTS "Sipariş ekleme anonim" ON orders;
 CREATE POLICY "Sipariş ekleme anonim" ON orders
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Siparişleri admin siler" ON orders;
+CREATE POLICY "Siparişleri admin siler" ON orders
+  FOR DELETE USING (
+    auth.role() = 'authenticated'
+  );
+
 -- Mevcut tabloya eksik kolonları ekle (tablo zaten oluştuysa hata vermez)
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone text;
