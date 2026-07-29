@@ -39,7 +39,7 @@
   <script src="./script.js"></script>
   <script>
 const _supabase=supabase.createClient('https://xjmyqadcqpaxlbpfnzja.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqbXlxYWRjcXBheGxicGZuemphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxMjAwOTMsImV4cCI6MjA1NzY5NjA5M30.5ftjN2c2M68xLTJM0IByGJGef8GHvBHJLBMpDvOEK3I');
-(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');let query=_supabase.from('products').select('*, categories!inner(name)');if(slug)query=query.eq('categories.slug',slug);let{data:p,error}=await query.order('sort_order');if(error||!p)return;if(slug&&p.length){const cat=p[0].categories;$('#catEyebrow').textContent=cat.name.toUpperCase();$('#catTitle').textContent=cat.name}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}renderProducts(p)})();
+(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');let query=_supabase.from('products').select('*, categories!inner(name)');if(slug)query=query.eq('categories.slug',slug);let{data:p,error}=await query.order('name');if(error||!p)return;if(slug&&p.length){const cat=p[0].categories;$('#catEyebrow').textContent=cat.name.toUpperCase();$('#catTitle').textContent=cat.name}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}renderProducts(p)})();
   </script>
 </body>
 </html>

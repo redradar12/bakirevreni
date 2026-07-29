@@ -341,7 +341,7 @@ async function loadDashboard() {
 
 /* ========== CATEGORIES ========== */
 async function loadCategories() {
-  const { data, error } = await _sb.from('categories').select('*').order('sort_order');
+  const { data, error } = await _sb.from('categories').select('*').order('group_name').order('name');
   const tbody = $('#catTableBody');
   const empty = $('#catEmpty');
   tbody.innerHTML = '';
@@ -417,7 +417,7 @@ async function deleteCategory(id) {
 
 /* ========== PRODUCTS ========== */
 async function loadProducts() {
-  const { data, error } = await _sb.from('products').select('*, categories(name)').order('sort_order');
+  const { data, error } = await _sb.from('products').select('*, categories(name)').order('name');
   const tbody = $('#prodTableBody');
   const empty = $('#prodEmpty');
   tbody.innerHTML = '';
