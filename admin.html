@@ -1,0 +1,572 @@
+﻿<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bakır Evreni — Admin Paneli</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',Arial,sans-serif;font-size:14px;color:#23201d;background:#f5f3ef;min-height:100vh}
+    a{color:inherit;text-decoration:none}
+
+    /* Login */
+    .login-page{display:grid;place-items:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#292622,#4a3f38)}
+    .login-card{background:#fff;border-radius:16px;padding:48px 40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+    .login-card h1{font-size:24px;margin-bottom:4px;letter-spacing:-.02em}
+    .login-card p{color:#7a736c;font-size:13px;margin-bottom:28px}
+    .login-card label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5a534c;margin-bottom:6px}
+    .login-card input{width:100%;padding:11px 14px;border:1.5px solid #ded8d0;border-radius:8px;font:inherit;font-size:14px;outline:0;transition:.2s}
+    .login-card input:focus{border-color:#a85d38}
+    .login-card .field{margin-bottom:16px}
+    .login-card button{width:100%;padding:13px;border:0;border-radius:8px;background:#292622;color:#fff;font:inherit;font-weight:700;font-size:13px;cursor:pointer;transition:.2s;margin-top:8px}
+    .login-card button:hover{background:#a85d38}
+    .login-card .error{color:#c0392b;font-size:12px;margin-top:12px;text-align:center;display:none}
+    .login-card .loader{display:none;text-align:center;font-size:13px;color:#7a736c;margin-top:12px}
+
+    /* Admin layout */
+    .admin-page{display:none}
+    .admin-header{background:#292622;color:#fff;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between}
+    .admin-header h1{font-size:17px;font-weight:600;letter-spacing:-.01em}
+    .admin-header h1 span{color:#e5a57c}
+    .admin-header .user-info{display:flex;align-items:center;gap:14px;font-size:12px;color:#ccc}
+    .admin-header button{background:0;border:1px solid #655e58;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font:inherit;font-size:11px;transition:.2s}
+    .admin-header button:hover{border-color:#a85d38;color:#e5a57c}
+
+    .admin-body{display:flex;min-height:calc(100vh - 60px)}
+    .admin-sidebar{width:210px;background:#fff;border-right:1px solid #e5e0d9;padding:20px 0;flex-shrink:0}
+    .admin-sidebar a{display:flex;align-items:center;gap:10px;padding:11px 22px;font-size:13px;font-weight:500;color:#4a4340;transition:.15s;border-right:3px solid transparent}
+    .admin-sidebar a:hover{background:#f5f3ef}
+    .admin-sidebar a.active{background:#f5f3ef;color:#a85d38;border-right-color:#a85d38;font-weight:700}
+
+    .admin-content{flex:1;padding:30px 32px;overflow-y:auto}
+
+    /* Pages */
+    .page{display:none}
+    .page.active{display:block}
+
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .page-header h2{font-size:22px;font-weight:600}
+    .page-header .btn{background:#292622;color:#fff;border:0;padding:9px 20px;border-radius:7px;font:inherit;font-weight:600;font-size:12px;cursor:pointer;transition:.2s}
+    .page-header .btn:hover{background:#a85d38}
+
+    /* Tables */
+    .table-wrap{background:#fff;border-radius:10px;border:1px solid #e5e0d9;overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{background:#f9f7f3;text-align:left;padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#7a736c;font-weight:700;border-bottom:1px solid #e5e0d9}
+    td{padding:12px 16px;border-bottom:1px solid #f0ece6}
+    tr:last-child td{border-bottom:0}
+    .table-wrap .empty{text-align:center;padding:50px 20px;color:#9d958e;font-size:13px}
+
+    .tag{display:inline-block;background:#f0ece6;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;color:#5a534c}
+    .badge-pill{display:inline-block;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.03em}
+    .badge-pill.seller{background:#ffe8d6;color:#a85d38}
+    .badge-pill.new{background:#d6f0e0;color:#1e7a4a}
+
+    .actions-cell{display:flex;gap:6px}
+    .actions-cell button{border:0;padding:5px 12px;border-radius:5px;font:inherit;font-size:11px;cursor:pointer;transition:.15s}
+    .actions-cell .edit{background:#f0ece6;color:#23201d}
+    .actions-cell .edit:hover{background:#e5ddd3}
+    .actions-cell .delete{background:#fce8e6;color:#c0392b}
+    .actions-cell .delete:hover{background:#f8d7d4}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:none;place-items:center;padding:20px}
+    .modal-overlay.open{display:grid}
+    .modal{background:#fff;border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:32px 36px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+    .modal h3{font-size:19px;margin-bottom:20px}
+    .modal .field{margin-bottom:14px}
+    .modal label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#5a534c;margin-bottom:5px}
+    .modal input,.modal select,.modal textarea{width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:7px;font:inherit;font-size:13px;outline:0;transition:.15s}
+    .modal input:focus,.modal select:focus,.modal textarea:focus{border-color:#a85d38}
+    .modal textarea{resize:vertical;min-height:70px}
+    .modal .row{display:flex;gap:12px}
+    .modal .row .field{flex:1}
+    .modal .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+    .modal .modal-actions button{padding:9px 20px;border-radius:7px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;border:0;transition:.15s}
+    .modal .modal-actions .primary{background:#292622;color:#fff}
+    .modal .modal-actions .primary:hover{background:#a85d38}
+    .modal .modal-actions .cancel{background:#f0ece6;color:#23201d}
+    .modal .modal-actions .cancel:hover{background:#e5ddd3}
+
+    /* Toast */
+    .toast{position:fixed;bottom:25px;left:50%;z-index:200;background:#292622;color:#fff;padding:13px 24px;border-radius:8px;transform:translate(-50%,80px);opacity:0;transition:.3s;font-size:13px;pointer-events:none}
+    .toast.show{transform:translate(-50%,0);opacity:1}
+
+    .image-preview{max-width:60px;max-height:60px;border-radius:4px;object-fit:cover}
+    .img-placeholder{width:40px;height:40px;background:#f0ece6;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#9d958e}
+    .upload-row{display:flex;gap:10px;align-items:center}
+    .upload-row input[type=text]{flex:1}
+    .upload-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1.5px solid #ded8d0;border-radius:8px;background:#fff;font:inherit;font-size:12px;cursor:pointer;transition:.2s;white-space:nowrap;color:#4a4340}
+    .upload-btn:hover{border-color:#a85d38;color:#a85d38}
+    .upload-btn input{position:absolute;opacity:0;width:0;height:0}
+    .upload-spinner{display:inline-block;width:14px;height:14px;border:2px solid #ded8d0;border-top-color:#a85d38;border-radius:50%;animation:spin .6s linear}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div class="login-page" id="loginPage">
+  <div class="login-card">
+    <h1>Admin Paneli</h1>
+    <p>Bakır Evreni yönetim paneline hoş geldiniz.</p>
+    <div class="field">
+      <label>E-posta</label>
+      <input type="email" id="loginEmail" placeholder="admin@bakirevreni.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Şifre</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button id="loginBtn">Giriş Yap</button>
+    <div class="error" id="loginError"></div>
+    <div class="loader" id="loginLoader">Giriş yapılıyor…</div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-page" id="adminPage">
+  <header class="admin-header">
+    <h1>Bakır <span>Evreni</span> · Admin</h1>
+    <div class="user-info">
+      <span id="adminEmail"></span>
+      <button id="logoutBtn">Çıkış</button>
+    </div>
+  </header>
+  <div class="admin-body">
+    <nav class="admin-sidebar">
+      <a href="#" data-page="dashboard" class="active">📊 Genel Bakış</a>
+      <a href="#" data-page="categories">📁 Kategoriler</a>
+      <a href="#" data-page="products">📦 Ürünler</a>
+      <a href="#" data-page="settings">⚙️ Ayarlar</a>
+    </nav>
+    <div class="admin-content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header"><h2>Genel Bakış</h2></div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:180px;background:#fff;border-radius:10px;border:1px solid #e5e0d9;padding:24px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7a736c;font-weight:700">Kategori</div>
+            <div style="font-size:36px;font-weight:700;margin-top:8px" id="dashCatCount">0</div>
+          </div>
+          <div style="flex:1;min-width:180px;background:#fff;border-radius:10px;border:1px solid #e5e0d9;padding:24px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7a736c;font-weight:700">Ürün</div>
+            <div style="font-size:36px;font-weight:700;margin-top:8px" id="dashProdCount">0</div>
+          </div>
+          <div style="flex:1;min-width:180px;background:#fff;border-radius:10px;border:1px solid #e5e0d9;padding:24px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7a736c;font-weight:700">Admin</div>
+            <div style="font-size:13px;margin-top:12px;color:#4a4340" id="dashAdminInfo">Yükleniyor…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div class="page" id="page-categories">
+        <div class="page-header">
+          <h2>Kategoriler</h2>
+          <button class="btn" id="addCatBtn">+ Yeni Kategori</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Sıra</th><th>Kategori Adı</th><th>Grup</th><th>Görsel</th><th>İşlem</th></tr></thead>
+            <tbody id="catTableBody"></tbody>
+          </table>
+          <div class="empty" id="catEmpty">Henüz kategori eklenmemiş.</div>
+        </div>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div class="page" id="page-products">
+        <div class="page-header">
+          <h2>Ürünler</h2>
+          <button class="btn" id="addProdBtn">+ Yeni Ürün</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Sıra</th><th>Ürün Adı</th><th>Kategori</th><th>Fiyat</th><th>İndirim</th><th>Rozet</th><th>Görsel</th><th>İşlem</th></tr></thead>
+            <tbody id="prodTableBody"></tbody>
+          </table>
+          <div class="empty" id="prodEmpty">Henüz ürün eklenmemiş.</div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="page-settings">
+        <div class="page-header"><h2>⚙️ Ayarlar</h2></div>
+        <div style="max-width:520px;background:#fff;border-radius:10px;border:1px solid #e5e0d9;padding:28px;margin-top:16px">
+          <h3 style="font-size:15px;margin-bottom:16px">iyzico Ödeme Entegrasyonu</h3>
+          <div class="field"><label>API Anahtarı</label><input id="setApiKey" placeholder="iyzico API Key" style="font-family:monospace"></div>
+          <div class="field"><label>Gizli Anahtar (Secret Key)</label><input id="setSecretKey" type="password" placeholder="iyzico Secret Key" style="font-family:monospace"></div>
+          <div class="field"><label style="display:flex;align-items:center;gap:8px;text-transform:none;font-weight:400"><input type="checkbox" id="setSandbox" checked> Sandbox (test modu)</label></div>
+          <div style="margin-top:16px;display:flex;gap:10px">
+            <button class="btn" id="saveSettingsBtn">💾 Kaydet</button>
+            <span id="settingsStatus" style="font-size:12px;color:#7a736c;align-self:center"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+/* ========== SUPABASE ========== */
+const supabaseUrl = 'https://xjmyqadcqpaxlbpfnzja.supabase.co';
+const supabaseKey = 'sb_publishable_FfEcIdgVL9SGOKIe5QEA9g_yrbcJd4l';
+const _sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+let editingId = null;
+let editingType = null;
+
+async function uploadFile(fileInputId, targetInputId) {
+  const file = $(fileInputId).files[0];
+  if (!file) return;
+  const btn = $(fileInputId).parentElement;
+  btn.innerHTML = '<span class="upload-spinner"></span> Sıkıştırılıyor...';
+  const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = URL.createObjectURL(file) });
+  const maxW = 900, maxH = 900;
+  let w = img.width, h = img.height;
+  if (w > maxW) { h = h * maxW / w; w = maxW }
+  if (h > maxH) { w = w * maxH / h; h = maxH }
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  const blob = await new Promise(r => c.toBlob(r, 'image/webp', 0.8));
+  URL.revokeObjectURL(img.src);
+  btn.innerHTML = '<span class="upload-spinner"></span> Yükleniyor...';
+  const path = Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.webp';
+  const { data, error } = await _sb.storage.from('bakir').upload(path, blob, { contentType: 'image/webp' });
+  if (error) { say('Yükleme hatası: ' + error.message); btn.innerHTML = '<span>📷</span> Resim Seç<input type="file" accept="image/*" id="' + fileInputId + '">'; return; }
+  const { data: { publicUrl } } = _sb.storage.from('bakir').getPublicUrl(data.path);
+  $(targetInputId).value = publicUrl;
+  btn.innerHTML = '<span>📷</span> Resim Seç<input type="file" accept="image/*" id="' + fileInputId + '">';
+  say('Resim yüklendi (' + (blob.size / 1024).toFixed(0) + ' KB).');
+}
+
+/* ========== TOAST ========== */
+function say(text) {
+  const t = $('#toast');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ========== AUTH ========== */
+async function checkAuth() {
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) {
+    $('#loginPage').style.display = 'none';
+    $('#adminPage').style.display = 'block';
+    $('#adminEmail').textContent = session.user.email;
+    loadDashboard();
+  }
+}
+
+$('#loginBtn').onclick = async () => {
+  const email = $('#loginEmail').value.trim();
+  const password = $('#loginPassword').value;
+  const err = $('#loginError');
+  const loader = $('#loginLoader');
+  err.style.display = 'none';
+  loader.style.display = 'block';
+  $('#loginBtn').disabled = true;
+
+  const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+  loader.style.display = 'none';
+  $('#loginBtn').disabled = false;
+
+  if (error) {
+    err.textContent = error.message === 'Invalid login credentials'
+      ? 'E-posta veya şifre hatalı.'
+      : error.message;
+    err.style.display = 'block';
+    return;
+  }
+  $('#loginPage').style.display = 'none';
+  $('#adminPage').style.display = 'block';
+  $('#adminEmail').textContent = data.user.email;
+  loadDashboard();
+};
+
+$('#loginPassword').onkeydown = e => { if (e.key === 'Enter') $('#loginBtn').click(); };
+$('#loginEmail').onkeydown = e => { if (e.key === 'Enter') $('#loginBtn').click(); };
+
+$('#logoutBtn').onclick = async () => {
+  await _sb.auth.signOut();
+  $('#adminPage').style.display = 'none';
+  $('#loginPage').style.display = 'grid';
+  $('#loginPassword').value = '';
+  $('#loginError').style.display = 'none';
+};
+
+/* ========== NAV ========== */
+$$('.admin-sidebar a').forEach(a => {
+  a.onclick = e => {
+    e.preventDefault();
+    $$('.admin-sidebar a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    $$('.page').forEach(p => p.classList.remove('active'));
+    const page = $('#page-' + a.dataset.page);
+    if (page) page.classList.add('active');
+    if (a.dataset.page === 'categories') loadCategories();
+    if (a.dataset.page === 'products') loadProducts();
+    if (a.dataset.page === 'settings') loadSettings();
+  };
+});
+
+/* ========== DASHBOARD ========== */
+async function loadDashboard() {
+  const { count: catCount } = await _sb.from('categories').select('*', { count: 'exact', head: true });
+  const { count: prodCount } = await _sb.from('products').select('*', { count: 'exact', head: true });
+  $('#dashCatCount').textContent = catCount ?? 0;
+  $('#dashProdCount').textContent = prodCount ?? 0;
+  const { data: { user } } = await _sb.auth.getUser();
+  $('#dashAdminInfo').innerHTML = `${user?.email}<br><small style="color:#9d958e">${user?.created_at ? 'Kayıt: ' + new Date(user.created_at).toLocaleDateString('tr-TR') : ''}</small>`;
+}
+
+/* ========== CATEGORIES ========== */
+async function loadCategories() {
+  const { data, error } = await _sb.from('categories').select('*').order('sort_order');
+  const tbody = $('#catTableBody');
+  const empty = $('#catEmpty');
+  tbody.innerHTML = '';
+  if (error) { say('Kategoriler yüklenirken hata: ' + error.message); return; }
+  if (!data || data.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  data.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${c.sort_order ?? '-'}</td>
+      <td><strong>${c.name}</strong></td>
+      <td><span class="tag">${c.group_name}</span></td>
+      <td>${c.image_url ? `<img src="${c.image_url}" class="image-preview">` : '<span class="img-placeholder">—</span>'}</td>
+      <td class="actions-cell">
+        <button class="edit" data-id="${c.id}">Düzenle</button>
+        <button class="delete" data-id="${c.id}">Sil</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.edit').forEach(b => b.onclick = () => openCategoryModal(b.dataset.id));
+  tbody.querySelectorAll('.delete').forEach(b => b.onclick = () => deleteCategory(b.dataset.id));
+}
+
+$('#addCatBtn').onclick = () => openCategoryModal(null);
+
+async function openCategoryModal(id) {
+  editingId = id || null;
+  editingType = 'category';
+  let cat = { name: '', slug: '', group_name: '', image_url: '', sort_order: 0 };
+  if (id) {
+    const { data } = await _sb.from('categories').select('*').eq('id', id).single();
+    if (data) cat = data;
+  }
+  const m = $('#modalContent');
+  m.innerHTML = `
+    <h3>${id ? 'Kategori Düzenle' : 'Yeni Kategori'}</h3>
+    <div class="field"><label>Kategori Adı</label><input id="fCatName" value="${cat.name}"></div>
+    <div class="field"><label>Slug (URL)</label><input id="fCatSlug" value="${cat.slug}" placeholder="ornek-slug"></div>
+    <div class="field"><label>Grup Adı</label><input id="fCatGroup" value="${cat.group_name}" placeholder="İçecek &amp; Kahve"></div>
+    <div class="field"><label>Görsel</label><div class="upload-row"><input id="fCatImg" value="${cat.image_url || ''}" placeholder="assets/ornek.jpg"><button type="button" class="upload-btn" onclick="document.getElementById('fCatUp').click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fCatUp" onchange="uploadFile('fCatUp','fCatImg')" hidden></button></div></div>
+    <div class="field"><label>Sıra</label><input id="fCatOrder" type="number" value="${cat.sort_order || 0}"></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">İptal</button>
+      <button class="primary" id="saveCatBtn">Kaydet</button>
+    </div>`;
+  $('#modalOverlay').classList.add('open');
+  $('#saveCatBtn').onclick = saveCategory;
+}
+
+async function saveCategory() {
+  const data = {
+    name: $('#fCatName').value.trim(),
+    slug: $('#fCatSlug').value.trim() || $('#fCatName').value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''),
+    group_name: $('#fCatGroup').value.trim(),
+    image_url: $('#fCatImg').value.trim() || null,
+    sort_order: parseInt($('#fCatOrder').value) || 0
+  };
+  if (!data.name) { say('Kategori adı gerekli.'); return; }
+  if (!data.slug) { say('Slug gerekli.'); return; }
+
+  const { error } = editingId
+    ? await _sb.from('categories').update(data).eq('id', editingId)
+    : await _sb.from('categories').insert(data);
+
+  closeModal();
+  if (error) { say('Hata: ' + error.message); return; }
+  say(editingId ? 'Kategori güncellendi.' : 'Kategori eklendi.');
+  loadCategories();
+}
+
+async function deleteCategory(id) {
+  if (!confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) return;
+  const { error } = await _sb.from('categories').delete().eq('id', id);
+  if (error) { say('Silme hatası: ' + error.message); return; }
+  say('Kategori silindi.');
+  loadCategories();
+}
+
+/* ========== PRODUCTS ========== */
+async function loadProducts() {
+  const { data, error } = await _sb.from('products').select('*, categories(name)').order('sort_order');
+  const tbody = $('#prodTableBody');
+  const empty = $('#prodEmpty');
+  tbody.innerHTML = '';
+  if (error) { say('Ürünler yüklenirken hata: ' + error.message); return; }
+  if (!data || data.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  data.forEach(p => {
+    const tr = document.createElement('tr');
+    const badgeHtml = p.badge ? (p.badge === 'ÇOK SATAN' ? '<span class="badge-pill seller">ÇOK SATAN</span>' : '<span class="badge-pill new">YENİ</span>') : '';
+    tr.innerHTML = `
+      <td>${p.sort_order ?? '-'}</td>
+      <td><strong>${p.name}</strong></td>
+      <td><span class="tag">${p.categories?.name || '-'}</span></td>
+      <td>${p.price ? p.price.toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</td>
+      <td>${p.old_price ? p.old_price.toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</td>
+      <td>${badgeHtml}</td>
+      <td>${p.image_url ? `<img src="${p.image_url}" class="image-preview">` : '<span class="img-placeholder">—</span>'}</td>
+      <td class="actions-cell">
+        <button class="edit" data-id="${p.id}">Düzenle</button>
+        <button class="delete" data-id="${p.id}">Sil</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.edit').forEach(b => b.onclick = () => openProductModal(b.dataset.id));
+  tbody.querySelectorAll('.delete').forEach(b => b.onclick = () => deleteProduct(b.dataset.id));
+}
+
+$('#addProdBtn').onclick = () => openProductModal(null);
+
+async function openProductModal(id) {
+  editingId = id || null;
+  editingType = 'product';
+  let prod = { name: '', slug: '', description: '', price: 0, old_price: null, category_id: '', image_url: '', badge: '', is_bestseller: false, is_new: false, sort_order: 0 };
+  if (id) {
+    const { data } = await _sb.from('products').select('*').eq('id', id).single();
+    if (data) prod = data;
+  }
+
+  const { data: cats } = await _sb.from('categories').select('id,name,group_name').order('group_name').order('name');
+  const catOptions = (cats || []).map(c => `<option value="${c.id}" ${prod.category_id === c.id ? 'selected' : ''}>${c.group_name} — ${c.name}</option>`).join('');
+
+  const badgeOpts = ['', 'ÇOK SATAN', 'YENİ'].map(b => `<option value="${b}" ${prod.badge === b ? 'selected' : ''}>${b || 'Yok'}</option>`).join('');
+
+  const m = $('#modalContent');
+  m.innerHTML = `
+    <h3>${id ? 'Ürün Düzenle' : 'Yeni Ürün'}</h3>
+    <div class="row">
+      <div class="field"><label>Ürün Adı</label><input id="fProdName" value="${prod.name}"></div>
+      <div class="field"><label>Slug</label><input id="fProdSlug" value="${prod.slug}" placeholder="urun-adi"></div>
+    </div>
+    <div class="field"><label>Açıklama</label><textarea id="fProdDesc">${prod.description || ''}</textarea></div>
+    <div class="row">
+      <div class="field"><label>Fiyat (₺)</label><input id="fProdPrice" type="number" step="0.01" value="${prod.price || 0}"></div>
+      <div class="field"><label>İndirimli Fiyat (₺)</label><input id="fProdOld" type="number" step="0.01" value="${prod.old_price || ''}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Kategori</label><select id="fProdCat">${catOptions}</select></div>
+      <div class="field"><label>Rozet</label><select id="fProdBadge">${badgeOpts}</select></div>
+    </div>
+    <div class="field"><label>Görsel</label><div class="upload-row"><input id="fProdImg" value="${prod.image_url || ''}" placeholder="assets/urun.jpg"><button type="button" class="upload-btn" onclick="document.getElementById('fProdUp').click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fProdUp" onchange="uploadFile('fProdUp','fProdImg')" hidden></button></div></div>
+    <div class="row">
+      <div class="field"><label>Sıra</label><input id="fProdOrder" type="number" value="${prod.sort_order || 0}"></div>
+      <div class="field"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:8px;padding-top:8px;text-transform:none;font-weight:400;font-size:13px"><input type="checkbox" id="fProdBest" ${prod.is_bestseller ? 'checked' : ''}> Çok satan</label></div>
+      <div class="field"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:8px;padding-top:8px;text-transform:none;font-weight:400;font-size:13px"><input type="checkbox" id="fProdNew" ${prod.is_new ? 'checked' : ''}> Yeni</label></div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">İptal</button>
+      <button class="primary" id="saveProdBtn">Kaydet</button>
+    </div>`;
+  $('#modalOverlay').classList.add('open');
+  $('#saveProdBtn').onclick = saveProduct;
+}
+
+async function saveProduct() {
+  const data = {
+    name: $('#fProdName').value.trim(),
+    slug: $('#fProdSlug').value.trim() || $('#fProdName').value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''),
+    description: $('#fProdDesc').value.trim() || null,
+    price: parseFloat($('#fProdPrice').value) || 0,
+    old_price: $('#fProdOld').value ? parseFloat($('#fProdOld').value) : null,
+    category_id: $('#fProdCat').value || null,
+    image_url: $('#fProdImg').value.trim() || null,
+    badge: $('#fProdBadge').value || null,
+    is_bestseller: $('#fProdBest').checked,
+    is_new: $('#fProdNew').checked,
+    sort_order: parseInt($('#fProdOrder').value) || 0
+  };
+  if (!data.name) { say('Ürün adı gerekli.'); return; }
+  if (!data.slug) { say('Slug gerekli.'); return; }
+
+  const { error } = editingId
+    ? await _sb.from('products').update(data).eq('id', editingId)
+    : await _sb.from('products').insert(data);
+
+  closeModal();
+  if (error) { say('Hata: ' + error.message); return; }
+  say(editingId ? 'Ürün güncellendi.' : 'Ürün eklendi.');
+  loadProducts();
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
+  const { error } = await _sb.from('products').delete().eq('id', id);
+  if (error) { say('Silme hatası: ' + error.message); return; }
+  say('Ürün silindi.');
+  loadProducts();
+}
+
+/* ========== MODAL ========== */
+function closeModal() {
+  $('#modalOverlay').classList.remove('open');
+  editingId = null;
+  editingType = null;
+}
+$('#modalOverlay').onclick = e => { if (e.target === $('#modalOverlay')) closeModal(); };
+
+/* ========== SETTINGS ========== */
+async function loadSettings() {
+  const { data } = await _sb.from('settings').select('key,value');
+  if (!data) return;
+  data.forEach(r => {
+    if (r.key === 'iyzico_api_key') $('#setApiKey').value = r.value;
+    if (r.key === 'iyzico_secret_key') $('#setSecretKey').value = r.value;
+    if (r.key === 'iyzico_sandbox') $('#setSandbox').checked = r.value !== 'false';
+  });
+}
+$('#saveSettingsBtn').onclick = async () => {
+  const s = $('#settingsStatus'); s.textContent = 'Kaydediliyor…';
+  const rows = [
+    { key: 'iyzico_api_key', value: $('#setApiKey').value.trim() },
+    { key: 'iyzico_secret_key', value: $('#setSecretKey').value.trim() },
+    { key: 'iyzico_sandbox', value: $('#setSandbox').checked ? 'true' : 'false' },
+  ];
+  for (const r of rows) {
+    const { error } = await _sb.from('settings').upsert(r, { onConflict: 'key' });
+    if (error) { s.textContent = 'Hata: ' + error.message; return; }
+  }
+  s.textContent = '✅ Kaydedildi.';
+  setTimeout(() => s.textContent = '', 2500);
+};
+
+/* ========== INIT ========== */
+checkAuth();
+</script>
+</body>
+</html>
+

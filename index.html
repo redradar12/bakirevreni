@@ -1,0 +1,181 @@
+﻿<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bakır Evreni | Zamansız Sofralar</title>
+  <meta name="description" content="El işçiliği bakır ürünler, Bakır Evreni." />
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    .account-btn svg,.cart-link svg{width:21px;height:21px;display:block;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+    .account-btn{width:35px;height:35px;display:grid;place-items:center;padding:6px}
+    .cart-link{width:38px;height:38px;display:grid;place-items:center;padding:6px}
+    .cart-link em{right:0;top:0;border:2px solid var(--paper);font-family:'DM Sans',Arial,sans-serif;font-weight:700}
+    @media(max-width:760px){.cart-link em{border-color:var(--paper)}}
+    .cart-drawer .field input:focus{outline:0;border-color:#a85d38}
+    .cart-drawer #payBtn{width:100%;background:#292622;color:#fff;border:0;padding:12px;border-radius:6px;font-weight:700;cursor:pointer}
+    .cart-drawer #payBtn:hover{background:#a85d38}
+    .cart-drawer #payBtn:disabled{background:#ccc;cursor:default}
+  </style>
+  <style>
+    .footer-links{grid-column:3;grid-row:1;display:flex;gap:23px;justify-content:flex-end}
+    .payment-methods{grid-column:1/3;display:flex;align-items:center;gap:15px;margin-top:3px}
+    .payment-methods>span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#aaa299;font-weight:700}
+    .payment-icons{display:flex;align-items:center;gap:8px}.payment-icons b{height:27px;min-width:44px;padding:0 6px;border:1px solid #65605a;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;color:#f3f0ec;font-family:Arial,sans-serif;font-size:11px;letter-spacing:.03em}.payment-icons .visa{font-style:italic;font-weight:800;color:#e5e8ff;letter-spacing:-.03em}.payment-icons .mastercard{position:relative;width:43px;min-width:43px;padding:0;border:0}.mastercard i{position:absolute;width:18px;height:18px;border-radius:50%;background:#ed5b42;left:4px}.mastercard i+ i{background:#f5b83e;left:17px;mix-blend-mode:screen}.payment-icons .troy{color:#5ce3bd;font-weight:800;font-size:12px;letter-spacing:-.06em}
+    @media(max-width:760px){.footer-links{grid-column:1;grid-row:auto;justify-content:flex-start}.payment-methods{grid-column:1;grid-row:auto;margin-top:0;flex-wrap:wrap;gap:10px}.payment-methods>span{width:100%}}
+</style>
+<style>
+/* Footer layout refresh */
+footer{display:grid;grid-template-columns:1.65fr .8fr 1fr;gap:45px;padding:62px 7vw 20px;background:#24211e}
+footer .footer-intro{display:flex;flex-direction:column;align-items:flex-start;gap:17px}.footer-intro .brand{font-size:22px}.footer-intro p{line-height:1.7;color:#bdb6af}.instagram{font-size:11px!important;letter-spacing:.03em;color:#e5a57c!important;text-decoration:none;margin-top:3px}
+footer .footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:12px}.footer-column h4{color:#a8a098;font-size:10px;text-transform:uppercase;letter-spacing:.14em;margin:3px 0 8px}.footer-column a{font-size:12px;color:#eeeae6;font-weight:500}.footer-column a:hover,.instagram:hover{color:#fff!important}
+footer .footer-bottom{grid-column:1/-1;margin-top:18px;padding-top:19px;border-top:1px solid #4c4843;display:flex;align-items:center;justify-content:space-between;gap:20px}.footer-bottom small{border:0;padding:0;margin:0;grid-column:auto}.footer-bottom .payment-methods{margin:0;display:flex;align-items:center;gap:14px}.footer-bottom .payment-icons{display:flex;align-items:center;gap:7px}
+@media(max-width:760px){footer{grid-template-columns:1fr 1fr;gap:34px 20px;padding:44px 20px 20px}footer .footer-intro{grid-column:1/-1}.footer-bottom{flex-direction:column;align-items:flex-start!important;gap:18px!important;margin-top:0!important}.footer-bottom small{font-size:10px!important}.footer-column a{font-size:11px}}
+</style>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="announcement"><span>Türkiye'nin her yerine ücretsiz kargo</span><span class="dot">•</span><span>Güvenli alışveriş</span></div>
+  <header class="header">
+    <button class="icon-btn mobile-only" id="menuBtn" aria-label="Menüyü aç"><i class="i-menu"></i></button>
+    <a class="brand" href="#anasayfa" aria-label="Bakır Evreni ana sayfa"><span>BAKIR</span><b>EVRENİ</b></a>
+    <nav class="desktop-nav"><a href="tum-urunler.html">Tüm Ürünler</a><a href="#koleksiyonlar">Koleksiyonlar</a><a href="#hikayemiz">Hikâyemiz</a><a href="#bakir">Bakır Hakkında</a><a href="#sss">S.S.S.</a></nav>
+    <div class="actions"><button class="icon-btn" id="searchBtn" aria-label="Ara"><i class="i-search"></i></button><button class="icon-btn account-btn desktop-only" aria-label="Hesabım">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M4.8 20c.7-3.65 3.18-5.55 7.2-5.55s6.5 1.9 7.2 5.55"></path></svg>
+      </button><button class="cart-link" id="cartBtn" aria-label="Sepet">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.2 7.5h13.6l-1 12H6.2l-1-12Z"></path><path d="M9 8V6.25a3 3 0 0 1 6 0V8"></path></svg><em id="cartCount">0</em>
+      </button></div>
+  </header>
+   <div class="mobile-menu" id="mobileMenu">
+    <button class="close" data-close>×</button>
+    <nav>
+      <a href="tum-urunler.html">Tüm Ürünler</a>
+      <a href="#hikayemiz">Hikâyemiz</a>
+      <a href="#bakir">Bakır Hakkında</a>
+      <a href="#sss">S.S.S.</a>
+      <a href="#iletisim">İletişim</a>
+    </nav>
+    <div class="mob-menu-cats">
+      <span class="mob-cat-title">Kategoriler</span>
+      <div class="mob-cat-group">
+        <span class="mob-cat-group-title">İçecek &amp; Kahve</span>
+        <a href="#koleksiyonlar" data-cat>Mataralar</a>
+        <a href="#koleksiyonlar" data-cat>Sürahiler</a>
+        <a href="#koleksiyonlar" data-cat>Bardaklar</a>
+        <a href="#koleksiyonlar" data-cat>Kahve setleri &amp; fincanlar</a>
+        <a href="#koleksiyonlar" data-cat>Cezveler</a>
+        <a href="#koleksiyonlar" data-cat>Irbıklar</a>
+        <a href="#koleksiyonlar" data-cat>Semaverler</a>
+      </div>
+      <div class="mob-cat-group">
+        <span class="mob-cat-group-title">Pişirme &amp; Mutfak</span>
+        <a href="#koleksiyonlar" data-cat>Tencereler</a>
+        <a href="#koleksiyonlar" data-cat>Tavalar</a>
+        <a href="#koleksiyonlar" data-cat>Bakraç (yoğurt satılı)</a>
+        <a href="#koleksiyonlar" data-cat>Krom mangallık</a>
+      </div>
+      <div class="mob-cat-group">
+        <span class="mob-cat-group-title">Sofra &amp; Sunum</span>
+        <a href="#koleksiyonlar" data-cat>Sunumluklar</a>
+        <a href="#koleksiyonlar" data-cat>Tepsiler</a>
+        <a href="#koleksiyonlar" data-cat>Çerezlik &amp; şekerlik</a>
+        <a href="#koleksiyonlar" data-cat>Baharatlık</a>
+      </div>
+      <div class="mob-cat-group">
+        <span class="mob-cat-group-title">Dekorasyon &amp; Aydınlatma</span>
+        <a href="#koleksiyonlar" data-cat>Vazolar</a>
+        <a href="#koleksiyonlar" data-cat>Saat ve şamdan setleri</a>
+        <a href="#koleksiyonlar" data-cat>Fenerler</a>
+        <a href="#koleksiyonlar" data-cat>Şamdanlar</a>
+      </div>
+      <div class="mob-cat-group">
+        <span class="mob-cat-group-title">Aksesuarlar</span>
+        <a href="#koleksiyonlar" data-cat>Aksesuarlar</a>
+        <a href="#koleksiyonlar" data-cat>Krom mutfak aksesuarları</a>
+      </div>
+      <div class="mob-cat-group">
+        <span class="mob-cat-group-title">Özel Koleksiyon</span>
+        <a href="#koleksiyonlar" data-cat>Özel yapım ürünlerimiz</a>
+        <a href="#koleksiyonlar" data-cat>Ehlikeyfler</a>
+        <a href="#koleksiyonlar" data-cat>Hamam tasları</a>
+      </div>
+    </div>
+  </div>
+
+  <main id="anasayfa">
+    <section class="hero">
+      <div class="hero-image"></div><div class="hero-shade"></div>
+      <div class="hero-copy"><p class="eyebrow">EL İŞÇİLİĞİYLE HAYAT BULAN</p><h1>Sofranızın<br><i>bakır</i> evreni.</h1><p>Gelenekten ilham alan, her detayıyla size özel ürünler.</p><a class="button light" href="#urunler">Koleksiyonu keşfet <span>→</span></a></div>
+      <div class="scroll-note">AŞAĞI KAYDIR <span></span></div>
+    </section>
+
+    <section class="feature-strip"><div><b>El işçiliği</b><span>Özenle üretilir</span></div><div><b>Güvenli ödeme</b><span>iyzico altyapısı ile yakında</span></div><div><b>Ücretsiz kargo</b><span>Tüm Türkiye'ye</span></div><div><b>Kolay iade</b><span>14 gün içinde</span></div></section>
+
+    <section class="products section" id="urunler"><div class="section-head"><div><p class="eyebrow copper">SEÇKİN PARÇALAR</p><h2>En çok satanlar</h2></div><a href="tum-urunler.html" class="text-link">Tümünü incele <span>→</span></a></div>
+      <div class="product-grid" id="productGrid"></div></section>
+
+    <section class="categories section" id="koleksiyonlar"><div class="section-head"><div><p class="eyebrow copper">KEŞFET</p><h2>Koleksiyonlar</h2></div><a href="#urunler" class="text-link">Tüm kategoriler <span>→</span></a></div><div class="category-grid" id="categoryGrid"></div></section>
+
+    <section class="story" id="hikayemiz">
+      <div class="story-copy full">
+        <p class="eyebrow copper">HAKKIMIZDA</p>
+        <h2>Bir zanaatın<br>izinde.</h2>
+        <p>Çok eski zamanlara dayanan bir aile geleneğimiz var. Dedelerimizden, büyük dedelerimizden gelen bir miras bu. Bakır işlemeciliği bizim için sadece bir meslek değil, aynı zamanda bir yaşam biçimi.</p>
+        <p>Her bir ürünümüzde emek, sabır ve özveri var. Geleneksel yöntemlerle, tamamen el işçiliği ile üretiyoruz. Makine değil, insan dokunuşu diyoruz. Her bir parçamız usta ellerde şekilleniyor, adeta bir sanat eserine dönüşüyor.</p>
+        <p>Bakır Evreni olarak Türkiye'nin dört bir yanına özenle hazırlanmış ürünlerimizi gönderiyoruz. Amacımız sadece bir ürün satmak değil, bir kültürü, bir geleneği yaşatmak ve sofranıza değer katmak.</p>
+        <p>Neden bakır diye soracak olursanız; bakır, binlerce yıldır insanlık tarihinin en değerli metallerinden biri olmuştur. Hem sağlıklı hem de uzun ömürlüdür. Doğru kullanıldığında nesiller boyu size eşlik eder. Üstelik bakırın o eşsiz parlaklığı ve sıcaklığı sofranıza ayrı bir şıklık katar.</p>
+        <p>Bizler, bu değerli mirası yaşatmak için var gücümüzle çalışıyoruz. Sizlerden gelen güzel yorumlar ve destek bizi daha da ileriye taşıyor. Bakır Evreni ailesi olarak en büyük mutluluğumuz, sizlerin sofralarında yer almak ve güzel anılarınıza eşlik etmek.</p>
+        <p class="signature">Güveniniz için teşekkür ederiz.<br><strong>Bakır Evreni Ailesi</strong></p>
+      </div>
+    </section>
+    <section class="values section" id="bakir"><p class="eyebrow copper centered">BAKIR EVRENİ FARKI</p><h2 class="centered">Bakırın doğal güzelliği</h2><div class="value-grid"><div><span>01</span><h3>%100 el işçiliği</h3><p>Her ürün, usta ellerde özenle şekillenir.</p></div><div><span>02</span><h3>Yerli üretim</h3><p>Geleneksel bakırcılık mirasını yaşatıyoruz.</p></div><div><span>03</span><h3>Ömürlük kalite</h3><p>Doğru bakımla nesiller boyu sizinle.</p></div></div></section>
+
+    <section class="faq section" id="sss">
+      <div class="section-head"><div><p class="eyebrow copper">MERAK EDİLENLER</p><h2>Sıkça sorulan sorular</h2></div></div>
+      <div class="faq-list">
+        <details class="faq-item"><summary>Temizlik ve Bakım — Bakır mutfak eşyalarımın temizliğini ve bakımını nasıl yapmalıyım?</summary><p>Bakır ürünlerinizin uzun ömürlü olması için elde, yumuşak bir sünger ve doğal bulaşık deterjanı ile yıkanması tavsiye edilir. Bulaşık makinesinde yıkama yapmayınız. Zamanla oluşan doğal oksitlenmeyi (kararmayı) gidermek için limon-tuz karışımı veya özel bakır parlatıcı kremler ile kolayca ilk günkü parlaklığına kavuşturabilirsiniz.</p></details>
+        <details class="faq-item"><summary>Dayanıklılık ve Kullanım — Bakır kapların kulp ve ağız kısımları günlük kullanıma uygun ve dayanıklı mıdır?</summary><p>Evet. Ürünlerimizin kulp ve birleşim noktaları günlük yoğun kullanıma dayanacak şekilde perçinlenmiş veya sağlam malzemelerle güçlendirilmiştir. Yüksek ısıya ve günlük mutfak kullanımına tam uyumludur.</p></details>
+        <details class="faq-item"><summary>Kalay Zamanlaması — Bakır ürünlerde yeniden kalaylama işlemi ne zaman yapılmalıdır?</summary><p>Gıdayla temas eden iç yüzeydeki kalay kaplama zamanla aşınıp alttaki kırmızı bakır yüzey görünmeye başladığında kalay yenileme zamanı gelmiş demektir. Kullanım sıklığına bağlı olarak bu süre genellikle 1 ila 3 yıl arasında değişmektedir.</p></details>
+        <details class="faq-item"><summary>El İşçiliği ve Özgünlük — Ürünler el yapımı olduğu için dış yüzeylerinde veya dokusunda farklılıklar olur mu?</summary><p>Evet, ürünlerimizin her biri ustalarımızın el işçiliği ile şekillendirildiği için yüzeydeki çekiç izleri ve dokularda ufak farklılıklar olabilir. Bu durum bir kusur değil, ürününüzün seri üretim olmadığını ve size özel tekliğini gösteren bir özelliktir.</p></details>
+        <details class="faq-item"><summary>Kalaylı ve Kalaysız Ürün Farkı — Kalaylı bakır ile kalaysız bakır ürünler arasındaki fark nedir ve hangisi tercih edilmelidir?</summary><p>Gıdayla doğrudan temas eden ve pişen yemek kaplarının (tencere, tava, çaydanlık vb.) iç yüzeyi sağlık ve lezzet güvenliği için kalaylanır. Dekora yönelik ürünler, ibrikler veya sadece su/soğuk meşrubat sunumu için kullanılan bazı kaplar ise kalaysız olarak tercih edilebilir.</p></details>
+        <details class="faq-item"><summary>Kararma ve Parlaklık — Bakır ürünler zamanla kararma yapar mı? Bu durum normal midir?</summary><p>Bakır, yapısı gereği havayla temas ettikçe doğal olarak oksitlenir ve rengi koyulaşabilir. Bu tamamen doğal ve bakırın kalitesini gösteren bir süreçtir. Parlak görünümünü korumak isterseniz pratik parlatma yöntemleriyle kolayca ilk görünümüne döndürebilirsiniz.</p></details>
+      </div>
+    </section>
+
+    <section class="newsletter" id="iletisim"><p class="eyebrow">YENİLİKLERDEN HABERDAR OLUN</p><h2>Evrenimize katılın.</h2><p>Yeni koleksiyonlar ve size özel fırsatlardan ilk siz haberdar olun.</p><form id="newsletterForm"><input type="email" placeholder="E-posta adresiniz" required><button aria-label="Gönder">→</button></form><small id="formMessage"></small></section>
+  </main>
+  <footer>
+  <div class="footer-intro"><a class="brand" href="#anasayfa"><span>BAKIR</span><b>EVRENİ</b></a><p>Gelenekten sofranıza, sevgiyle.<br>El işçiliği bakırın zamansız hâli.</p><a class="instagram" href="https://www.instagram.com/bakir_evreni" target="_blank" rel="noopener">◎ &nbsp;@bakir_evreni</a></div>
+  <div class="footer-column"><h4>Keşfet</h4><a href="#urunler">Tüm ürünler</a><a href="#koleksiyonlar">Koleksiyonlar</a><a href="#hikayemiz">Hikâyemiz</a><a href="#bakir">Bakır hakkında</a></div>
+  <div class="footer-column"><h4>Müşteri hizmetleri</h4><a href="#sss">S.S.S.</a><a href="#iletisim">İletişim</a><a href="#">Kargo & teslimat</a><a href="#">İade & değişim</a><a href="kosullar.html">Mesafeli satış sözleşmesi</a><a href="kvkk.html">KVKK & Gizlilik</a></div>
+  <div class="footer-bottom"><div class="payment-methods" aria-label="Kabul edilen ödeme yöntemleri"><span>Güvenli ödeme</span><div class="payment-icons"><b class="visa">VISA</b><b class="mastercard" aria-label="Mastercard"><i></i><i></i></b><b class="troy">troy</b></div></div><small>© 2026 Bakır Evreni. Tüm hakları saklıdır.</small></div>
+</footer>
+  <div class="overlay" id="overlay"></div><aside class="cart-drawer" id="cartDrawer">
+  <button class="close" data-close>×</button>
+  <h2>Sepetiniz</h2>
+  <div id="cartItems"><p class="empty">Sepetiniz henüz boş.</p></div>
+  <div id="cartTotal" style="padding:12px 20px;border-top:1px solid var(--line);font-weight:700;display:none">Toplam: <span id="totalPrice">₺0.00</span></div>
+  <div class="cart-bottom" id="cartPayment">
+    <button class="checkout" id="checkoutBtn">Ödemeye geç</button>
+    <div id="paymentForm" style="display:none;margin-top:12px">
+      <div class="field" style="margin-bottom:10px"><input id="cardName" placeholder="Kart üzerindeki isim" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"></div>
+      <div class="field" style="margin-bottom:10px"><input id="cardNumber" placeholder="Kart numarası" maxlength="19" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace"></div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <input id="cardMonth" placeholder="AA" maxlength="2" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace">
+        <input id="cardYear" placeholder="YY" maxlength="2" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace">
+        <input id="cardCvc" placeholder="CVC" maxlength="4" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace">
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#4a4340;margin:8px 0;line-height:1.4"><input type="checkbox" id="kvkkCheck"> <a href="kvkk.html" target="_blank" style="color:var(--copper)">KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum.</label>
+      <button class="checkout" id="payBtn" style="margin-top:4px">💳 Ödemeyi Tamamla</button>
+      <div id="payStatus" style="font-size:12px;margin-top:8px;text-align:center;color:#7a736c"></div>
+    </div>
+  </div>
+</aside>
+  <div class="search-modal" id="searchModal"><button class="close" data-close>×</button><label for="searchInput">Ne arıyorsunuz?</label><input id="searchInput" autocomplete="off" placeholder="Ürün ara..." /><p>Örneğin: cezve, matara, semaver, bardak</p></div><div class="toast" id="toast"></div>
+  <script src="./script.js"></script>
+
+</body></html>
+
+
+
+
+

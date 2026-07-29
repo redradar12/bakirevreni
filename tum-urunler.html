@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tüm Ürünler — Bakır Evreni</title>
+  <meta name="description" content="Tüm bakır ürünlerimiz." />
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="announcement"><span>Türkiye'nin her yerine ücretsiz kargo</span><span class="dot">•</span><span>Güvenli alışveriş</span></div>
+  <header class="header">
+    <a class="brand" href="./index.html" aria-label="Bakır Evreni ana sayfa"><span>BAKIR</span><b>EVRENİ</b></a>
+    <nav class="desktop-nav"><a href="./index.html#urunler">Tüm Ürünler</a><a href="./index.html#koleksiyonlar">Koleksiyonlar</a><a href="./index.html#hikayemiz">Hikâyemiz</a><a href="./index.html#bakir">Bakır Hakkında</a><a href="./index.html#sss">S.S.S.</a></nav>
+    <div class="actions"><button class="cart-link" id="cartBtn" aria-label="Sepet">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.2 7.5h13.6l-1 12H6.2l-1-12Z"></path><path d="M9 8V6.25a3 3 0 0 1 6 0V8"></path></svg><em id="cartCount">0</em>
+    </button></div>
+  </header>
+
+  <section class="products section" id="urunler" style="padding-top:40px">
+    <div class="section-head"><div><p class="eyebrow copper" id="catEyebrow">TÜM ÜRÜNLER</p><h2 id="catTitle">Koleksiyonumuz</h2></div></div>
+    <div class="product-grid" id="productGrid"></div>
+  </section>
+
+  <footer style="margin-top:80px">
+    <div class="footer-intro">
+      <a class="brand" href="./index.html"><span>BAKIR</span><b>EVRENİ</b></a>
+      <p>El işçiliği bakır ürünler. Geleneksel yöntemlerle, ustalıkla üretilir.</p>
+    </div>
+    <div class="footer-column"><h4>Bağlantılar</h4><a href="./index.html#urunler">Tüm Ürünler</a><a href="./index.html#koleksiyonlar">Koleksiyonlar</a><a href="./index.html#hikayemiz">Hikâyemiz</a><a href="./index.html#sss">S.S.S.</a></div>
+    <div class="footer-column"><h4>İletişim</h4><a href="#">info@bakirevreni.com</a><a href="#">0532 XXX XX XX</a></div>
+    <div class="footer-bottom"><small>© 2026 Bakır Evreni</small></div>
+  </footer>
+
+  <div class="overlay" id="overlay"></div>
+  <aside class="cart-drawer" id="cartDrawer"><button class="close" data-close>×</button><h2>Sepetiniz</h2><div id="cartItems"><p class="empty">Sepetiniz henüz boş.</p></div><div class="cart-bottom"><p>Ödeme altyapısı (iyzico) yakında eklenecektir.</p><button class="checkout">Ödemeye geç</button></div></aside>
+  <div class="toast" id="toast"></div>
+
+  <script src="./script.js"></script>
+  <script>
+const _supabase=supabase.createClient('https://xjmyqadcqpaxlbpfnzja.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqbXlxYWRjcXBheGxicGZuemphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxMjAwOTMsImV4cCI6MjA1NzY5NjA5M30.5ftjN2c2M68xLTJM0IByGJGef8GHvBHJLBMpDvOEK3I');
+(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');let query=_supabase.from('products').select('*, categories!inner(name)');if(slug)query=query.eq('categories.slug',slug);let{data:p,error}=await query.order('sort_order');if(error||!p)return;if(slug&&p.length){const cat=p[0].categories;$('#catEyebrow').textContent=cat.name.toUpperCase();$('#catTitle').textContent=cat.name}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}renderProducts(p)})();
+  </script>
+</body>
+</html>
