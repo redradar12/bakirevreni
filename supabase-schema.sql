@@ -115,6 +115,10 @@ CREATE TABLE IF NOT EXISTS orders (
   items jsonb NOT NULL,
   total numeric(10,2) NOT NULL,
   customer_name text,
+  customer_email text,
+  customer_phone text,
+  customer_address text,
+  customer_city text,
   payment_id text,
   payment_status text DEFAULT 'success',
   created_at timestamptz DEFAULT now()
@@ -131,3 +135,9 @@ CREATE POLICY "Siparişleri admin görür" ON orders
 DROP POLICY IF EXISTS "Sipariş ekleme anonim" ON orders;
 CREATE POLICY "Sipariş ekleme anonim" ON orders
   FOR INSERT WITH CHECK (true);
+
+-- Mevcut tabloya eksik kolonları ekle (tablo zaten oluştuysa hata vermez)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_city text;
