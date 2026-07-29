@@ -18,4 +18,4 @@ function renderProducts(products,gridId='productGrid'){const grid=$(gridId);if(!
 const SB_URL='https://xjmyqadcqpaxlbpfnzja.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqbXlxYWRjcXBheGxicGZuemphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNjA1ODgsImV4cCI6MjEwMDgzNjU4OH0.q_UJivzLt-UPJZ90AfkSXx1fRByNtf1GMjcUmV-1HJs';
 const SB_HEAD={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
 async function sbGet(path){try{const r=await fetch(SB_URL+'/rest/v1/'+path,{headers:SB_HEAD});if(!r.ok)return null;return await r.json()}catch{return null}}
-(async()=>{const p=await sbGet('products?select=*&limit=12');if(!p)return;renderProducts(p)})();
+async function loadProducts(url){const p=await sbGet(url);if(!p)return;renderProducts(p)}
