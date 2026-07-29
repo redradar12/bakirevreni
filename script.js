@@ -14,8 +14,32 @@ $on('#cardMonth','oninput',function(){this.value=this.value.replace(/\D/g,'')});
 $on('#cardYear','oninput',function(){this.value=this.value.replace(/\D/g,'')});
 $on('#cardCvc','oninput',function(){this.value=this.value.replace(/\D/g,'')});
 
-function renderProducts(products,gridId='#productGrid'){const sel=(typeof gridId==='string'&&gridId.charAt(0)==='#')?gridId:'#'+gridId;const grid=$(sel);if(!grid)return;const safe=(v,field,def)=>{if(v==null)return def;return v[field]!==undefined?v[field]:(v[field.toLowerCase()]!==undefined?v[field.toLowerCase()]:def)};grid.innerHTML=products.map(v=>{const b=v.badge||'';const img=v.image_url||v.image||v.imageUrl||'assets/copperware.jpg';const price=(v.price||v.price===0)?Number(v.price).toFixed(2):'0.00';const oldp=(v.old_price||v.old_price===0)?Number(v.old_price).toFixed(2):'';return `<article class="product"><div class="product-photo${b?'':' image-product'}">${b?`<span class="badge">${b}</span>`:''}<button class="wish">♡</button><img src="${img}" alt="${v.name||''}"></div><div class="product-info"><p class="product-type">${v.type||''}</p><h3>${v.name||'İsim yok'}</h3><p class="price">₺${price}${oldp?`<del>₺${oldp}</del>`:''}</p><button class="add" data-product="${(v.name||'').replace(/"/g,'&quot;')}" data-price="${price}">Sepete ekle <span>+</span></button></div></article>`}).join('');document.querySelectorAll('.add').forEach(b=>b.onclick=()=>addToCart(b.dataset.product,parseFloat(b.dataset.price)));document.querySelectorAll('.wish').forEach(b=>b.onclick=()=>{b.textContent=b.textContent==='♡'?'♥':'♡';b.style.color=b.textContent==='♥'?'#a85d38':''})}
+function renderProducts(products,gridId='#productGrid'){const sel=(typeof gridId==='string'&&gridId.charAt(0)==='#')?gridId:'#'+gridId;const grid=$(sel);if(!grid)return;const safe=(v,field,def)=>{if(v==null)return def;return v[field]!==undefined?v[field]:(v[field.toLowerCase()]!==undefined?v[field.toLowerCase()]:def)};const store=window._pd=window._pd||{};grid.innerHTML=products.map(v=>{const b=v.badge||'';const img=v.image_url||v.image||v.imageUrl||'assets/copperware.jpg';const price=(v.price||v.price===0)?Number(v.price).toFixed(2):'0.00';const oldp=(v.old_price||v.old_price===0)?Number(v.old_price).toFixed(2):'';const id=v.id||v.name||Math.random();store[id]=v;return `<article class="product" data-id="${id}"><div class="product-photo${b?'':' image-product'}">${b?`<span class="badge">${b}</span>`:''}<button class="wish">♡</button><img src="${img}" alt="${v.name||''}"></div><div class="product-info"><p class="product-type">${v.type||''}</p><h3>${v.name||'İsim yok'}</h3><p class="price">₺${price}${oldp?`<del>₺${oldp}</del>`:''}</p><button class="add" data-product="${(v.name||'').replace(/"/g,'&quot;')}" data-price="${price}">Sepete ekle <span>+</span></button></div></article>`}).join('');document.querySelectorAll('.add').forEach(b=>b.onclick=function(e){e.stopPropagation();addToCart(this.dataset.product,parseFloat(this.dataset.price))});document.querySelectorAll('.wish').forEach(b=>b.onclick=function(e){e.stopPropagation();this.textContent=this.textContent==='♡'?'♥':'♡';this.style.color=this.textContent==='♥'?'#a85d38':''});document.querySelectorAll('.product[data-id]').forEach(a=>a.onclick=function(){showProduct(this.dataset.id)})}
 const SB_URL='https://xjmyqadcqpaxlbpfnzja.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqbXlxYWRjcXBheGxicGZuemphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNjA1ODgsImV4cCI6MjEwMDgzNjU4OH0.q_UJivzLt-UPJZ90AfkSXx1fRByNtf1GMjcUmV-1HJs';
 const SB_HEAD={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
 async function sbGet(path){try{const r=await fetch(SB_URL+'/rest/v1/'+path,{headers:SB_HEAD});if(!r.ok)return null;return await r.json()}catch{return null}}
 async function loadProducts(url){const p=await sbGet(url);if(!p)return;renderProducts(p)}
+
+function showProduct(id){
+  const p=window._pd&&window._pd[id];
+  if(!p)return;
+  const img=p.image_url||p.image||p.imageUrl||'assets/copperware.jpg';
+  const price=(p.price||p.price===0)?Number(p.price).toFixed(2):'0.00';
+  const oldp=(p.old_price||p.old_price===0)?Number(p.old_price).toFixed(2):'';
+  const m=$('#productModal');
+  if(!m)return;
+  m.querySelector('.pm-img').src=img;
+  m.querySelector('.pm-img').alt=p.name||'';
+  m.querySelector('.pm-badge').textContent=p.badge||'';
+  m.querySelector('.pm-badge').style.display=p.badge?'':'none';
+  m.querySelector('.pm-name').textContent=p.name||'';
+  m.querySelector('.pm-type').textContent=p.type||'';
+  m.querySelector('.pm-price').innerHTML=`₺${price}${oldp?` <del>₺${oldp}</del>`:''}`;
+  m.querySelector('.pm-desc').textContent=p.description||p.desc||'Açıklama bulunamadı.';
+  m.querySelector('.pm-add').dataset.product=(p.name||'').replace(/"/g,'&quot;');
+  m.querySelector('.pm-add').dataset.price=price;
+  m.classList.add('open');
+  if(overlay)overlay.classList.add('show');
+}
+$on('#productModal','onclick',function(e){if(e.target===this||e.target.classList.contains('pm-close')){this.classList.remove('open');if(overlay)overlay.classList.remove('show')}});
+$on('.pm-add','onclick',function(){addToCart(this.dataset.product,parseFloat(this.dataset.price));$('#productModal').classList.remove('open');if(overlay)overlay.classList.remove('show')});

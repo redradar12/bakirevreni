@@ -1,15 +1,23 @@
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
 serve(async (req) => {
-  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: corsHeaders })
 
   const { cart, card, buyer } = await req.json()
   const apiKey = Deno.env.get('IYZICO_API_KEY')
   const secretKey = Deno.env.get('IYZICO_SECRET_KEY')
-  if (!apiKey || !secretKey) return new Response(JSON.stringify({ error: 'Ödeme ayarları yapılmamış.' }), { status: 400 })
+  if (!apiKey || !secretKey) return new Response(JSON.stringify({ error: 'Ödeme ayarları yapılmamış.' }), { status: 400, headers: corsHeaders })
 
   const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0)
 
+  const rnd = iyzioRnd()
   const payment = {
     locale: 'tr',
     conversationId: Date.now().toString(),
@@ -63,10 +71,10 @@ serve(async (req) => {
     })),
   }
 
-  const hashStr = apiKey + payment.conversationId + payment.price + payment.paidPrice + iyzioRnd() + payment.currency + secretKey
+  const hashStr = apiKey + payment.conversationId + payment.price + payment.paidPrice + rnd + payment.currency + secretKey
   const hash = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(hashStr)).then(b => Array.from(new Uint8Array(b)).map(b => b.toString(16).padStart(2, '0')).join(''))
 
-  const body = { ...payment, randomness: iyzioRnd(), signature: hash }
+  const body = { ...payment, randomString: rnd, signature: hash }
   const isSandbox = Deno.env.get('IYZICO_SANDBOX') === 'true'
   const base = isSandbox ? 'https://sandbox-api.iyzipay.com' : 'https://api.iyzipay.com'
 
@@ -81,7 +89,7 @@ serve(async (req) => {
 
   const result = await res.json()
   return new Response(JSON.stringify(result), {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     status: result.status === 'success' ? 200 : 400,
   })
 })
