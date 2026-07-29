@@ -144,6 +144,7 @@
       <a href="#" data-page="dashboard" class="active">📊 Genel Bakış</a>
       <a href="#" data-page="categories">📁 Kategoriler</a>
       <a href="#" data-page="products">📦 Ürünler</a>
+      <a href="#" data-page="orders">📋 Siparişler</a>
       <a href="#" data-page="settings">⚙️ Ayarlar</a>
     </nav>
     <div class="admin-content">
@@ -159,6 +160,10 @@
           <div style="flex:1;min-width:180px;background:#fff;border-radius:10px;border:1px solid #e5e0d9;padding:24px">
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7a736c;font-weight:700">Ürün</div>
             <div style="font-size:36px;font-weight:700;margin-top:8px" id="dashProdCount">0</div>
+          </div>
+          <div style="flex:1;min-width:180px;background:#fff;border-radius:10px;border:1px solid #e5e0d9;padding:24px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7a736c;font-weight:700">Sipariş</div>
+            <div style="font-size:36px;font-weight:700;margin-top:8px" id="dashOrderCount">0</div>
           </div>
           <div style="flex:1;min-width:180px;background:#fff;border-radius:10px;border:1px solid #e5e0d9;padding:24px">
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7a736c;font-weight:700">Admin</div>
@@ -194,6 +199,17 @@
             <tbody id="prodTableBody"></tbody>
           </table>
           <div class="empty" id="prodEmpty">Henüz ürün eklenmemiş.</div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+        <div class="page-header"><h2>Siparişler</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tarih</th><th>Ürünler</th><th>Toplam</th><th>Müşteri</th><th>Durum</th></tr></thead>
+            <tbody id="orderTableBody"></tbody>
+          </table>
+          <div class="empty" id="orderEmpty">Henüz sipariş yok.</div>
         </div>
       </div>
 
@@ -329,6 +345,7 @@ $$('.admin-sidebar a').forEach(a => {
     if (page) page.classList.add('active');
     if (a.dataset.page === 'categories') loadCategories();
     if (a.dataset.page === 'products') loadProducts();
+    if (a.dataset.page === 'orders') loadOrders();
     if (a.dataset.page === 'settings') loadSettings();
   };
 });
@@ -337,8 +354,10 @@ $$('.admin-sidebar a').forEach(a => {
 async function loadDashboard() {
   const { count: catCount } = await _sb.from('categories').select('*', { count: 'exact', head: true });
   const { count: prodCount } = await _sb.from('products').select('*', { count: 'exact', head: true });
+  const { count: orderCount } = await _sb.from('orders').select('*', { count: 'exact', head: true });
   $('#dashCatCount').textContent = catCount ?? 0;
   $('#dashProdCount').textContent = prodCount ?? 0;
+  $('#dashOrderCount').textContent = orderCount ?? 0;
   const { data: { user } } = await _sb.auth.getUser();
   $('#dashAdminInfo').innerHTML = `${user?.email}<br><small style="color:#9d958e">${user?.created_at ? 'Kayıt: ' + new Date(user.created_at).toLocaleDateString('tr-TR') : ''}</small>`;
 }
@@ -536,6 +555,28 @@ function closeModal() {
   editingType = null;
 }
 $('#modalOverlay').onclick = e => { if (e.target === $('#modalOverlay')) closeModal(); };
+
+/* ========== ORDERS ========== */
+async function loadOrders() {
+  const { data, error } = await _sb.from('orders').select('*').order('created_at', { ascending: false });
+  const tbody = $('#orderTableBody');
+  const empty = $('#orderEmpty');
+  tbody.innerHTML = '';
+  if (error) { say('Siparişler yüklenirken hata: ' + error.message); return; }
+  if (!data || data.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  data.forEach(o => {
+    const tr = document.createElement('tr');
+    const items = (o.items || []).map(i => `${i.name} x${i.qty || 1}`).join(', ');
+    tr.innerHTML = `
+      <td>${new Date(o.created_at).toLocaleDateString('tr-TR')} ${new Date(o.created_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}</td>
+      <td style="max-width:260px;white-space:normal">${items}</td>
+      <td><strong>${o.total ? Number(o.total).toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</strong></td>
+      <td>${o.customer_name || '-'}</td>
+      <td><span class="badge-pill seller">${o.payment_status === 'success' ? 'Başarılı' : o.payment_status}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
 
 /* ========== SETTINGS ========== */
 async function loadSettings() {

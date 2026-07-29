@@ -108,3 +108,26 @@ CREATE POLICY "Admin resim yükleyebilir" ON storage.objects
 DROP POLICY IF EXISTS "Herkes resim görebilir" ON storage.objects;
 CREATE POLICY "Herkes resim görebilir" ON storage.objects
   FOR SELECT USING (bucket_id = 'bakir');
+
+-- SİPARİŞLER TABLOSU
+CREATE TABLE IF NOT EXISTS orders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  items jsonb NOT NULL,
+  total numeric(10,2) NOT NULL,
+  customer_name text,
+  payment_id text,
+  payment_status text DEFAULT 'success',
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Siparişleri admin görür" ON orders;
+CREATE POLICY "Siparişleri admin görür" ON orders
+  FOR SELECT USING (
+    auth.role() = 'authenticated'
+  );
+
+DROP POLICY IF EXISTS "Sipariş ekleme anonim" ON orders;
+CREATE POLICY "Sipariş ekleme anonim" ON orders
+  FOR INSERT WITH CHECK (true);
