@@ -38,8 +38,10 @@ function showProduct(id){
   m.querySelector('.pm-desc').textContent=p.description||p.desc||'Açıklama bulunamadı.';
   m.querySelector('.pm-add').dataset.product=(p.name||'').replace(/"/g,'&quot;');
   m.querySelector('.pm-add').dataset.price=price;
+  const qtyEl=m.querySelector('.pm-qty');
+  if(qtyEl)qtyEl.value=1;
   m.classList.add('open');
   if(overlay)overlay.classList.add('show');
 }
 $on('#productModal','onclick',function(e){if(e.target===this||e.target.classList.contains('pm-close')){this.classList.remove('open');if(overlay)overlay.classList.remove('show')}});
-$on('.pm-add','onclick',function(){addToCart(this.dataset.product,parseFloat(this.dataset.price));$('#productModal').classList.remove('open');if(overlay)overlay.classList.remove('show')});
+$on('.pm-add','onclick',function(){const qty=parseInt($('#productModal').querySelector('.pm-qty').value)||1;for(let i=0;i<qty;i++)addToCart(this.dataset.product,parseFloat(this.dataset.price));$('#productModal').classList.remove('open');if(overlay)overlay.classList.remove('show')});document.querySelectorAll('.pm-qty-btn').forEach(b=>b.onclick=function(){const inp=this.parentElement.querySelector('.pm-qty');let v=parseInt(inp.value)||1;v+=this.dataset.dir==='+'?1:-1;if(v<1)v=1;if(v>99)v=99;inp.value=v});
