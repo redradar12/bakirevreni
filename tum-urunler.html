@@ -42,10 +42,10 @@
     <div id="paymentForm" style="display:none;margin-top:12px">
       <div class="field" style="margin-bottom:10px"><input id="cardName" placeholder="Kart üzerindeki isim" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"></div>
       <div class="field" style="margin-bottom:10px"><input id="cardNumber" placeholder="Kart numarası" maxlength="19" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace"></div>
-      <div style="display:flex;gap:10px;margin-bottom:10px">
-        <input id="cardMonth" placeholder="AA" maxlength="2" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace">
-        <input id="cardYear" placeholder="YY" maxlength="2" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace">
-        <input id="cardCvc" placeholder="CVC" maxlength="4" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace">
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="cardMonth" placeholder="Ay" maxlength="2" style="flex:1;min-width:0;padding:10px 8px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace;text-align:center">
+        <input id="cardYear" placeholder="Yıl" maxlength="2" style="flex:1;min-width:0;padding:10px 8px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace;text-align:center">
+        <input id="cardCvc" placeholder="CVC" maxlength="4" style="flex:1;min-width:0;padding:10px 8px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace;text-align:center">
       </div>
       <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#4a4340;margin:8px 0;line-height:1.4"><input type="checkbox" id="kvkkCheck"> <a href="kvkk.html" target="_blank" style="color:var(--copper)">KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum.</label>
       <button class="checkout" id="payBtn" style="margin-top:4px">💳 Ödemeyi Tamamla</button>
