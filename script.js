@@ -48,8 +48,8 @@ function showProduct(id){
     if(first&&first.trim().length<fullDesc.trim().length){shortEl.textContent=first;shortEl.classList.add('show')}else{shortEl.classList.remove('show')}
   }
   m.querySelector('.pm-desc').textContent=fullDesc||'Açıklama bulunamadı.';
-  const rev=m.querySelector('.pm-reviews');
-  if(rev){const rc=p.review_count||p.reviews||0;rev.textContent=rc?rc+' değerlendirme':'İlk yorumu siz yapın';rev.onclick=null}
+  const revCount=m.querySelector('.pm-reviews-count');
+  if(revCount)revCount.textContent='Yorumlar';
   m.querySelector('.pm-add').dataset.product=(p.name||'').replace(/"/g,'&quot;');
   m.querySelector('.pm-add').dataset.price=price;
   const qtyEl=m.querySelector('.pm-qty');
@@ -72,10 +72,50 @@ function showProduct(id){
     if(gal)gal.style.display='none';
     if(thumbs)thumbs.innerHTML='';
   }
+  const pid=p.id||id;
+  loadReviews(pid,m);
+  setupReviewForm(m,pid);
   m.classList.add('open');
   if(overlay)overlay.classList.add('show');
 }
 function showGalImg(m,gal,i){gal._idx=i;m.querySelector('.pm-img').src=gal._imgs[i];gal.querySelectorAll('.pm-dot').forEach(d=>d.classList.toggle('active',parseInt(d.dataset.i)===i))}
+function starRating(n){let h='';for(let i=1;i<=5;i++)h+=i<=n?'★':'☆';return h}
+async function loadReviews(pid,m){
+  const list=m.querySelector('.pm-review-list');if(!list)return;
+  list.innerHTML='<p class="pm-rev-empty">Yükleniyor…</p>';
+  try{const r=await fetch(SB_URL+'/rest/v1/reviews?product_id=eq.'+pid+'&order=created_at.desc&limit=20',{headers:SB_HEAD});const d=await r.json();
+  if(!Array.isArray(d)){list.innerHTML='';return}
+  renderReviews(d,m)}
+  catch{list.innerHTML=''}
+}
+function renderReviews(reviews,m){
+  const list=m.querySelector('.pm-review-list');if(!list)return;
+  const starsEl=m.querySelector('.pm-stars');const countEl=m.querySelector('.pm-reviews-count');
+  if(!reviews.length){list.innerHTML='<p class="pm-rev-empty">Henüz değerlendirme yok. İlk yorumu siz yapın!</p>';if(starsEl)starsEl.textContent='☆☆☆☆☆';if(countEl)countEl.textContent='0 değerlendirme';return}
+  let total=0;reviews.forEach(r=>total+=r.rating);const avg=(total/reviews.length).toFixed(1);
+  if(starsEl)starsEl.textContent=starRating(Math.round(Number(avg)));
+  if(countEl)countEl.textContent=reviews.length+' değerlendirme · '+avg;
+  list.innerHTML=reviews.map(r=>`<div class="pm-review-item"><div class="pm-review-head"><span class="pm-review-author">${(r.name||'Anonim').replace(/[<>&"]/g,'')}</span><span class="pm-review-stars">${starRating(r.rating)}</span></div><p class="pm-review-text">${(r.comment||'').replace(/[<>&"]/g,'')}</p><span class="pm-review-date">${new Date(r.created_at).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</span></div>`).join('')
+}
+function setupReviewForm(m,pid){
+  const pick=m.querySelector('.pm-star-pick');if(!pick)return;
+  let rating=0;const stars=pick.querySelectorAll('.pm-star');
+  stars.forEach(s=>{s.onclick=()=>{rating=parseInt(s.dataset.v);stars.forEach(t=>t.classList.toggle('on',parseInt(t.dataset.v)<=rating))};s.onmouseenter=()=>stars.forEach(t=>t.classList.toggle('on',parseInt(t.dataset.v)<=parseInt(s.dataset.v)))});
+  pick.onmouseleave=()=>stars.forEach(t=>t.classList.toggle('on',parseInt(t.dataset.v)<=rating));
+  const submit=m.querySelector('.pm-review-submit');const nameEl=m.querySelector('.pm-review-name');const commentEl=m.querySelector('.pm-review-comment');const msg=m.querySelector('.pm-review-msg');if(!submit)return;
+  submit.onclick=async()=>{
+    if(!rating){msg.textContent='Lütfen bir yıldız puanı seçin.';msg.className='pm-review-msg err';return}
+    const name=nameEl.value.trim();if(!name){msg.textContent='Adınızı girin.';msg.className='pm-review-msg err';return}
+    const comment=commentEl.value.trim();if(!comment||comment.length<5){msg.textContent='Yorumunuz en az 5 karakter olmalı.';msg.className='pm-review-msg err';return}
+    submit.disabled=true;msg.textContent='Gönderiliyor…';msg.className='pm-review-msg';
+    try{const r=await fetch(SB_URL+'/rest/v1/reviews',{method:'POST',headers:{...SB_HEAD,'Prefer':'return=minimal'},body:JSON.stringify({product_id:pid,name,rating,comment})});
+    if(!r.ok)throw new Error(await r.text());
+    msg.textContent='Yorumunuz eklendi, teşekkürler!';msg.className='pm-review-msg ok';
+    nameEl.value='';commentEl.value='';rating=0;stars.forEach(t=>t.classList.remove('on'));
+    setTimeout(()=>loadReviews(pid,m),1400)}
+    catch(e){msg.textContent='Hata oluştu, tekrar deneyin.';msg.className='pm-review-msg err';submit.disabled=false}
+  }
+}
 $on('#productModal','onclick',function(e){if(e.target===this||e.target.classList.contains('pm-close')){this.classList.remove('open');if(overlay)overlay.classList.remove('show')}});
 $on('.pm-add','onclick',function(){const qty=parseInt($('#productModal').querySelector('.pm-qty').value)||1;for(let i=0;i<qty;i++)addToCart(this.dataset.product,parseFloat(this.dataset.price));$('#productModal').classList.remove('open');if(overlay)overlay.classList.remove('show')});document.querySelectorAll('.pm-qty-btn').forEach(b=>b.onclick=function(){const inp=this.parentElement.querySelector('.pm-qty');let v=parseInt(inp.value)||1;v+=this.dataset.dir==='+'?1:-1;if(v<1)v=1;if(v>99)v=99;inp.value=v});
 drawCart();

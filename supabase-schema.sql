@@ -151,3 +151,18 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_city text;
 
 -- Mevcut products tablosuna images kolonunu ekle
 ALTER TABLE products ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;
+
+-- ███  Yorumlar / Reviews  ███
+CREATE TABLE IF NOT EXISTS reviews (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id  uuid REFERENCES products(id) ON DELETE CASCADE,
+  name        text NOT NULL,
+  rating      integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment     text NOT NULL,
+  created_at  timestamptz DEFAULT now()
+);
+
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Herkes yorum okuyabilir"       ON reviews FOR SELECT USING (true);
+CREATE POLICY "Herkes yorum yazabilir"        ON reviews FOR INSERT WITH CHECK (true);
+CREATE POLICY "Yetkili yorum silebilir"       ON reviews FOR DELETE USING (auth.role() = 'authenticated');
