@@ -20,6 +20,7 @@
   <section class="products section" id="urunler" style="padding-top:40px">
     <div class="section-head"><div><p class="eyebrow copper" id="catEyebrow">TÜM ÜRÜNLER</p><h2 id="catTitle">Koleksiyonumuz</h2></div></div>
     <div class="product-grid" id="productGrid"></div>
+    <p id="debug" style="text-align:center;color:#aaa;font-size:12px">yükleniyor…</p>
   </section>
 
   <footer style="margin-top:80px">
@@ -38,7 +39,7 @@
 
   <script src="./script.js"></script>
   <script>
-(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');let url='products?select=*';if(slug){const cats=await sbGet("categories?select=id&slug=eq."+slug);if(cats&&cats.length){url+='&category_id=eq.'+cats[0].id;$('#catEyebrow').textContent=cats[0].slug.toUpperCase();$('#catTitle').textContent=slug.charAt(0).toUpperCase()+slug.slice(1).replace(/-/g,' ')}}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}loadProducts(url)})();
+(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');let url='products?select=*';if(slug){const cats=await sbGet("categories?select=id&slug=eq."+slug);if(cats&&cats.length){url+='&category_id=eq.'+cats[0].id;$('#catEyebrow').textContent=cats[0].slug.toUpperCase();$('#catTitle').textContent=slug.charAt(0).toUpperCase()+slug.slice(1).replace(/-/g,' ')}}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}const p=await sbGet(url);$('#debug').textContent='ürün sayısı: '+(p?p.length:'null')+' / url: '+encodeURI(url);if(!p)return;renderProducts(p)})();
   </script>
 </body>
 </html>
