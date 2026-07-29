@@ -480,16 +480,23 @@ $('#addProdBtn').onclick = () => openProductModal(null);
 async function openProductModal(id) {
   editingId = id || null;
   editingType = 'product';
-  let prod = { name: '', description: '', price: 0, old_price: null, category_id: '', image_url: '', badge: '' };
+  let prod = { name: '', description: '', price: 0, old_price: null, category_id: '', image_url: '', images: [], badge: '' };
   if (id) {
     const { data } = await _sb.from('products').select('*').eq('id', id).single();
-    if (data) prod = data;
+    if (data) { prod = data; if (typeof prod.images === 'string') prod.images = JSON.parse(prod.images); if (!Array.isArray(prod.images)) prod.images = []; }
   }
+  if (!prod.images) prod.images = [];
 
   const { data: cats } = await _sb.from('categories').select('id,name,group_name').order('group_name').order('name');
   const catOptions = (cats || []).map(c => `<option value="${c.id}" ${prod.category_id === c.id ? 'selected' : ''}>${c.group_name} — ${c.name}</option>`).join('');
 
   const badgeOpts = ['', 'YENİ', 'ÖNE ÇIKAN', 'ÇOK SATAN'].map(b => `<option value="${b}" ${prod.badge === b ? 'selected' : ''}>${b || 'Yok'}</option>`).join('');
+
+  let imgsHtml = '';
+  for (let i = 0; i < 5; i++) {
+    const val = prod.images[i] || (i === 0 ? (prod.image_url || '') : '');
+    imgsHtml += `<div class="upload-row" style="margin-bottom:6px"><input class="fProdImg" id="fProdImg${i}" value="${val}" placeholder="Görsel ${i+1} URL"><button type="button" class="upload-btn" onclick="document.getElementById('fProdUp${i}').click()"><span>📷</span> Seç<input type="file" accept="image/*" id="fProdUp${i}" onchange="uploadFile('fProdUp${i}','fProdImg${i}')" hidden></button></div>`;
+  }
 
   const m = $('#modalContent');
   m.innerHTML = `
@@ -504,7 +511,7 @@ async function openProductModal(id) {
       <div class="field"><label>Kategori</label><select id="fProdCat">${catOptions}</select></div>
       <div class="field"><label>Rozet</label><select id="fProdBadge">${badgeOpts}</select></div>
     </div>
-    <div class="field"><label>Görsel</label><div class="upload-row"><input id="fProdImg" value="${prod.image_url || ''}" placeholder="assets/urun.jpg"><button type="button" class="upload-btn" onclick="var el=document.getElementById('fProdUp');if(el)el.click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fProdUp" onchange="uploadFile('fProdUp','fProdImg')" hidden></button></div></div>
+    <div class="field"><label>Görseller (en fazla 5)</label>${imgsHtml}</div>
     <div class="modal-actions">
       <button class="cancel" onclick="closeModal()">İptal</button>
       <button class="primary" id="saveProdBtn">Kaydet</button>
@@ -514,6 +521,11 @@ async function openProductModal(id) {
 }
 
 async function saveProduct() {
+  const imgs = [];
+  for (let i = 0; i < 5; i++) {
+    const el = $(`#fProdImg${i}`);
+    if (el && el.value.trim()) imgs.push(el.value.trim());
+  }
   const data = {
     name: $('#fProdName').value.trim(),
     slug: $('#fProdName').value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''),
@@ -521,7 +533,8 @@ async function saveProduct() {
     price: parseFloat($('#fProdPrice').value) || 0,
     old_price: $('#fProdOld').value ? parseFloat($('#fProdOld').value) : null,
     category_id: $('#fProdCat').value || null,
-    image_url: $('#fProdImg').value.trim() || null,
+    image_url: imgs[0] || null,
+    images: imgs,
     badge: $('#fProdBadge').value || null
   };
   if (!data.name) { say('Ürün adı gerekli.'); return; }
@@ -538,11 +551,14 @@ async function saveProduct() {
 
 async function deleteProduct(id) {
   if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
-  const { data: prod, error: getErr } = await _sb.from('products').select('image_url').eq('id', id).single();
-  if (prod?.image_url?.startsWith(supabaseUrl)) {
-    const path = prod.image_url.split('/').pop();
-    await _sb.storage.from('bakir').remove([path]);
-  }
+  const { data: prod, error: getErr } = await _sb.from('products').select('image_url,images').eq('id', id).single();
+  const allImgs = [prod?.image_url, ...(prod?.images || [])].filter(Boolean);
+  allImgs.forEach(url => {
+    if (url.startsWith(supabaseUrl)) {
+      const path = url.split('/').pop();
+      _sb.storage.from('bakir').remove([path]);
+    }
+  });
   const { error } = await _sb.from('products').delete().eq('id', id);
   if (error) { say('Silme hatası: ' + error.message); return; }
   say('Ürün silindi.');

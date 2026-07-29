@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS products (
   old_price numeric(10,2),
   category_id uuid REFERENCES categories(id) ON DELETE SET NULL,
   image_url text,
+  images jsonb DEFAULT '[]'::jsonb,
   badge text,
   is_bestseller boolean DEFAULT false,
   is_new boolean DEFAULT false,
@@ -147,3 +148,6 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_city text;
+
+-- Mevcut products tablosuna images kolonunu ekle
+ALTER TABLE products ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;

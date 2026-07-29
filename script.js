@@ -26,7 +26,8 @@ async function loadCategories(){const cats=await sbGet('categories?select=*&orde
 function showProduct(id){
   const p=window._pd&&window._pd[id];
   if(!p)return;
-  const img=p.image_url||p.image||p.imageUrl||'assets/copperware.jpg';
+  const imgs=(p.images&&p.images.length)?p.images:(p.image_url?[p.image_url]:['assets/copperware.jpg']);
+  const img=p.image_url||imgs[0]||'assets/copperware.jpg';
   const price=(p.price||p.price===0)?Number(p.price).toFixed(2):'0.00';
   const oldp=(p.old_price||p.old_price===0)?Number(p.old_price).toFixed(2):'';
   const m=$('#productModal');
@@ -43,9 +44,22 @@ function showProduct(id){
   m.querySelector('.pm-add').dataset.price=price;
   const qtyEl=m.querySelector('.pm-qty');
   if(qtyEl)qtyEl.value=1;
+  // Gallery
+  const gal=m.querySelector('.pm-gallery');
+  if(gal&&imgs.length>1){
+    const dots=imgs.map((_,i)=>`<span class="pm-dot${i===0?' active':''}" data-i="${i}"></span>`).join('');
+    gal.innerHTML=`<button class="pm-gal-btn pm-prev" data-dir="-1">◀</button><div class="pm-dots">${dots}</div><button class="pm-gal-btn pm-next" data-dir="1">▶</button>`;
+    gal.style.display='flex';
+    gal._imgs=imgs;
+    gal._idx=0;
+    m.querySelector('.pm-img').src=imgs[0];
+    gal.querySelectorAll('.pm-dot').forEach(d=>d.onclick=function(){const i=parseInt(this.dataset.i);showGalImg(m,gal,i)});
+    gal.querySelectorAll('.pm-gal-btn').forEach(b=>b.onclick=function(){const i=gal._idx+parseInt(this.dataset.dir);if(i>=0&&i<imgs.length)showGalImg(m,gal,i)});
+  }else if(gal){gal.style.display='none'}
   m.classList.add('open');
   if(overlay)overlay.classList.add('show');
 }
+function showGalImg(m,gal,i){gal._idx=i;m.querySelector('.pm-img').src=gal._imgs[i];gal.querySelectorAll('.pm-dot').forEach(d=>d.classList.toggle('active',parseInt(d.dataset.i)===i))}
 $on('#productModal','onclick',function(e){if(e.target===this||e.target.classList.contains('pm-close')){this.classList.remove('open');if(overlay)overlay.classList.remove('show')}});
 $on('.pm-add','onclick',function(){const qty=parseInt($('#productModal').querySelector('.pm-qty').value)||1;for(let i=0;i<qty;i++)addToCart(this.dataset.product,parseFloat(this.dataset.price));$('#productModal').classList.remove('open');if(overlay)overlay.classList.remove('show')});document.querySelectorAll('.pm-qty-btn').forEach(b=>b.onclick=function(){const inp=this.parentElement.querySelector('.pm-qty');let v=parseInt(inp.value)||1;v+=this.dataset.dir==='+'?1:-1;if(v<1)v=1;if(v>99)v=99;inp.value=v});
 drawCart();
