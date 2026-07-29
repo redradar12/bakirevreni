@@ -113,38 +113,7 @@ footer .footer-bottom{grid-column:1/-1;margin-top:18px;padding-top:19px;border-t
     <section class="products section" id="urunler"><div class="section-head"><div><p class="eyebrow copper">EN ÇOK SATANLAR</p><h2>Çok Satanlar</h2></div><a href="tum-urunler.html" class="text-link">Tümünü incele <span>→</span></a></div>
       <div class="product-grid" id="productGrid"></div></section>
 
-    <section class="categories section" id="koleksiyonlar"><div class="section-head"><div><p class="eyebrow copper">KEŞFET</p><h2>Koleksiyonlar</h2></div><a href="#urunler" class="text-link">Tüm kategoriler <span>→</span></a></div><div class="category-grid" id="categoryGrid">
-<span class="category-group">İçecek &amp; Kahve</span>
-<a href="tum-urunler.html?k=mataralar" class="category" style="background-image:url(assets/matara.png)"><span>Mataralar</span></a>
-<a href="tum-urunler.html?k=surahiler" class="category" style="background-image:url(assets/copper-jug.jpg)"><span>Sürahiler</span></a>
-<a href="tum-urunler.html?k=bardaklar" class="category" style="background-image:url(assets/coffee-set.jpg)"><span>Bardaklar</span></a>
-<a href="tum-urunler.html?k=kahve-setleri" class="category" style="background-image:url(assets/coffee-set.jpg)"><span>Kahve setleri &amp; fincanlar</span></a>
-<a href="tum-urunler.html?k=cezveler" class="category" style="background-image:url(assets/cezve-sand.jpg)"><span>Cezveler</span></a>
-<a href="tum-urunler.html?k=irbiklar" class="category" style="background-image:url(assets/coffee-pot-stove.jpg)"><span>Ir bıklar</span></a>
-<a href="tum-urunler.html?k=semaverler" class="category" style="background-image:url(assets/semaver.jpg)"><span>Semaverler</span></a>
-<span class="category-group">Pişirme &amp; Mutfak</span>
-<a href="tum-urunler.html?k=tencereler" class="category" style="background-image:url(assets/tencere.jpg)"><span>Tencereler</span></a>
-<a href="tum-urunler.html?k=tavalar" class="category" style="background-image:url(assets/tava.jpg)"><span>Tavalar</span></a>
-<a href="tum-urunler.html?k=bakrac" class="category" style="background-image:url(assets/copper-basin.jpg)"><span>Bakraç (yoğurt satılı)</span></a>
-<a href="tum-urunler.html?k=krom-mangallik" class="category" style="background-image:url(assets/copper-market.jpg)"><span>Krom mangallık</span></a>
-<span class="category-group">Sofra &amp; Sunum</span>
-<a href="tum-urunler.html?k=sunumluklar" class="category" style="background-image:url(assets/copper-tray.jpg)"><span>Sunumluklar</span></a>
-<a href="tum-urunler.html?k=tepsiler" class="category" style="background-image:url(assets/copper-tray.jpg)"><span>Tepsiler</span></a>
-<a href="tum-urunler.html?k=cerezlik-sekerlik" class="category" style="background-image:url(assets/copper-tray.jpg)"><span>Çerezlik &amp; şekerlik</span></a>
-<a href="tum-urunler.html?k=baharatlik" class="category" style="background-image:url(assets/copper-tray.jpg)"><span>Baharatlık</span></a>
-<span class="category-group">Dekorasyon &amp; Aydınlatma</span>
-<a href="tum-urunler.html?k=vazolar" class="category" style="background-image:url(assets/vazo1.jpg)"><span>Vazolar</span></a>
-<a href="tum-urunler.html?k=saat-samdan" class="category" style="background-image:url(assets/candle-holder.jpg)"><span>Saat ve şamdan setleri</span></a>
-<a href="tum-urunler.html?k=fenerler" class="category" style="background-image:url(assets/fener1.jpg)"><span>Fenerler</span></a>
-<a href="tum-urunler.html?k=samdanlar" class="category" style="background-image:url(assets/fener2.jpg)"><span>Şamdanlar</span></a>
-<span class="category-group">Aksesuarlar</span>
-<a href="tum-urunler.html?k=aksesuarlar" class="category" style="background-image:url(assets/aksesuar-koleksiyon.jpg)"><span>Aksesuarlar</span></a>
-<a href="tum-urunler.html?k=krom-mutfak" class="category" style="background-image:url(assets/aksesuar-koleksiyon.jpg)"><span>Krom mutfak aksesuarları</span></a>
-<span class="category-group">Özel Koleksiyon</span>
-<a href="tum-urunler.html?k=ozel-yapim" class="category" style="background-image:url(assets/copperware.jpg)"><span>Özel yapım ürünlerimiz</span></a>
-<a href="tum-urunler.html?k=ehlikeyfler" class="category" style="background-image:url(assets/ehlikeyf.jpg)"><span>Ehlikeyfler</span></a>
-<a href="tum-urunler.html?k=hamam-taslari" class="category" style="background-image:url(assets/copper-basin.jpg)"><span>Hamam tasları</span></a>
-</div></section>
+    <section class="categories section" id="koleksiyonlar"><div class="section-head"><div><p class="eyebrow copper">KEŞFET</p><h2>Koleksiyonlar</h2></div><a href="#urunler" class="text-link">Tüm kategoriler <span>→</span></a></div><div class="category-grid" id="categoryGrid"></div></section>
 
     <section class="story" id="hikayemiz">
       <div class="story-copy full">
@@ -224,6 +193,7 @@ footer .footer-bottom{grid-column:1/-1;margin-top:18px;padding-top:19px;border-t
   <script>
     // Show top 8 bestsellers in the SEÇKİN PARÇALAR section
     loadProducts("products?select=*&badge=eq.%C3%87OK%20SATAN&limit=8");
+    loadCategories();
   </script>
 </body></html>
 

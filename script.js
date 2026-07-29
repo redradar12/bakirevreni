@@ -21,6 +21,8 @@ const SB_HEAD={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'
 async function sbGet(path){try{const r=await fetch(SB_URL+'/rest/v1/'+path,{headers:SB_HEAD});if(!r.ok)return null;return await r.json()}catch{return null}}
 async function loadProducts(url){const p=await sbGet(url);if(!p)return;renderProducts(p)}
 
+async function loadCategories(){const cats=await sbGet('categories?select=*&order=sort_order');if(!cats||!cats.length)return;const grid=$('#categoryGrid');if(!grid)return;const groups={},order=[];cats.forEach(c=>{if(!groups[c.group_name]){groups[c.group_name]=[];order.push(c.group_name)}groups[c.group_name].push(c)});let html='';order.forEach(g=>{html+=`<span class="category-group">${g}</span>`;groups[g].forEach(c=>{html+=`<a href="tum-urunler.html?k=${c.slug}" class="category" style="background-image:url(${c.image_url||'assets/copperware.jpg'})"><span>${c.name}</span></a>`})});grid.innerHTML=html}
+
 function showProduct(id){
   const p=window._pd&&window._pd[id];
   if(!p)return;
