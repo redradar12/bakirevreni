@@ -426,7 +426,7 @@ async function loadProducts() {
   empty.style.display = 'none';
   data.forEach(p => {
     const tr = document.createElement('tr');
-    const badgeHtml = p.badge === 'YENİ' ? '<span class="badge-pill new">YENİ</span>' : (p.is_bestseller ? '<span class="badge-pill seller">ÇOK SATAN</span>' : '');
+    const badgeHtml = p.badge ? `<span class="badge-pill ${p.badge === 'YENİ' ? 'new' : 'seller'}">${p.badge}</span>` : '';
     tr.innerHTML = `
       <td><strong>${p.name}</strong></td>
       <td><span class="tag">${p.categories?.name || '-'}</span></td>
@@ -449,7 +449,7 @@ $('#addProdBtn').onclick = () => openProductModal(null);
 async function openProductModal(id) {
   editingId = id || null;
   editingType = 'product';
-  let prod = { name: '', description: '', price: 0, old_price: null, category_id: '', image_url: '', badge: '', is_bestseller: false, is_new: false };
+  let prod = { name: '', description: '', price: 0, old_price: null, category_id: '', image_url: '', badge: '' };
   if (id) {
     const { data } = await _sb.from('products').select('*').eq('id', id).single();
     if (data) prod = data;
@@ -458,7 +458,7 @@ async function openProductModal(id) {
   const { data: cats } = await _sb.from('categories').select('id,name,group_name').order('group_name').order('name');
   const catOptions = (cats || []).map(c => `<option value="${c.id}" ${prod.category_id === c.id ? 'selected' : ''}>${c.group_name} — ${c.name}</option>`).join('');
 
-  const badgeOpts = ['', 'YENİ'].map(b => `<option value="${b}" ${prod.badge === b ? 'selected' : ''}>${b || 'Yok'}</option>`).join('');
+  const badgeOpts = ['', 'YENİ', 'ÖNE ÇIKAN', 'ÇOK SATAN'].map(b => `<option value="${b}" ${prod.badge === b ? 'selected' : ''}>${b || 'Yok'}</option>`).join('');
 
   const m = $('#modalContent');
   m.innerHTML = `
@@ -474,10 +474,6 @@ async function openProductModal(id) {
       <div class="field"><label>Rozet</label><select id="fProdBadge">${badgeOpts}</select></div>
     </div>
     <div class="field"><label>Görsel</label><div class="upload-row"><input id="fProdImg" value="${prod.image_url || ''}" placeholder="assets/urun.jpg"><button type="button" class="upload-btn" onclick="document.getElementById('fProdUp').click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fProdUp" onchange="uploadFile('fProdUp','fProdImg')" hidden></button></div></div>
-    <div class="row">
-      <div class="field"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:8px;padding-top:8px;text-transform:none;font-weight:400;font-size:13px"><input type="checkbox" id="fProdBest" ${prod.is_bestseller ? 'checked' : ''}> Çok satan</label></div>
-      <div class="field"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:8px;padding-top:8px;text-transform:none;font-weight:400;font-size:13px"><input type="checkbox" id="fProdNew" ${prod.is_new ? 'checked' : ''}> Yeni</label></div>
-    </div>
     <div class="modal-actions">
       <button class="cancel" onclick="closeModal()">İptal</button>
       <button class="primary" id="saveProdBtn">Kaydet</button>
@@ -495,9 +491,7 @@ async function saveProduct() {
     old_price: $('#fProdOld').value ? parseFloat($('#fProdOld').value) : null,
     category_id: $('#fProdCat').value || null,
     image_url: $('#fProdImg').value.trim() || null,
-    badge: $('#fProdBadge').value || null,
-    is_bestseller: $('#fProdBest').checked,
-    is_new: $('#fProdNew').checked
+    badge: $('#fProdBadge').value || null
   };
   if (!data.name) { say('Ürün adı gerekli.'); return; }
 
