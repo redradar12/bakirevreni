@@ -38,7 +38,7 @@
 
   <script src="./script.js"></script>
   <script>
-(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');let url='products?select=*';if(slug){const cats=await sbGet("categories?select=id&slug=eq."+slug);if(cats&&cats.length)url+='&category_id=eq.'+cats[0].id}url+='&order=name';const p=await sbGet(url);if(!p)return;if(slug&&p.length){const cat=await sbGet("categories?select=name&slug=eq."+slug);if(cat&&cat.length){$('#catEyebrow').textContent=cat[0].name.toUpperCase();$('#catTitle').textContent=cat[0].name}}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}renderProducts(p)})();
+(async()=>{const params=new URLSearchParams(location.search);const slug=params.get('k');let url='products?select=*&limit=12';if(slug){const cats=await sbGet("categories?select=id&slug=eq."+slug);if(cats&&cats.length)url+='&category_id=eq.'+cats[0].id}const p=await sbGet(url);if(!p)return;if(slug&&p.length){const cat=await sbGet("categories?select=name&slug=eq."+slug);if(cat&&cat.length){$('#catEyebrow').textContent=cat[0].name.toUpperCase();$('#catTitle').textContent=cat[0].name}}else if(slug){$('#catEyebrow').textContent='KATEGORİ';$('#catTitle').textContent='Bu kategoride ürün bulunamadı'}renderProducts(p)})();
   </script>
 </body>
 </html>
