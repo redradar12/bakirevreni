@@ -207,7 +207,7 @@
         <div class="page-header"><h2>Siparişler</h2></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Tarih</th><th>Ürünler</th><th>Toplam</th><th>Müşteri</th><th>İletişim</th><th>Adres</th><th>Durum</th></tr></thead>
+            <thead><tr><th>Tarih</th><th>Ürünler</th><th>Toplam</th><th>Müşteri</th><th>İletişim</th><th>Adres</th><th>Durum</th><th>İşlem</th></tr></thead>
             <tbody id="orderTableBody"></tbody>
           </table>
           <div class="empty" id="orderEmpty">Henüz sipariş yok.</div>
@@ -576,9 +576,20 @@ async function loadOrders() {
       <td>${o.customer_name || '-'}</td>
       <td style="font-size:11px">${o.customer_email || ''}${o.customer_phone ? '<br>'+o.customer_phone : ''}</td>
       <td style="font-size:11px;max-width:180px;white-space:normal">${o.customer_address || ''}${o.customer_city ? ', '+o.customer_city : ''}</td>
-      <td><span class="badge-pill seller">${o.payment_status === 'success' ? 'Başarılı' : o.payment_status}</span></td>`;
+      <td><span class="badge-pill seller">${o.payment_status === 'success' ? 'Başarılı' : o.payment_status}</span></td>
+      <td class="actions-cell"><button class="delete" data-id="${o.id}">Sil</button></td>`;
     tbody.appendChild(tr);
   });
+  tbody.querySelectorAll('.delete').forEach(b => b.onclick = () => deleteOrder(b.dataset.id));
+}
+
+/* ========== DELETE ORDER ========== */
+async function deleteOrder(id) {
+  if (!confirm('Bu siparişi silmek istediğinize emin misiniz?')) return;
+  const { error } = await _sb.from('orders').delete().eq('id', id);
+  if (error) { say('Silme hatası: ' + error.message); return; }
+  say('Sipariş silindi.');
+  loadOrders();
 }
 
 /* ========== SETTINGS ========== */
