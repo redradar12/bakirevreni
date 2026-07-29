@@ -36,17 +36,22 @@
   <button class="close" data-close>×</button>
   <h2>Sepetiniz</h2>
   <div id="cartItems"><p class="empty">Sepetiniz henüz boş.</p></div>
-  <div id="cartTotal" style="padding:12px 20px;border-top:1px solid var(--line);font-weight:700;display:none">Toplam: <span id="totalPrice">₺0.00</span></div>
   <div class="cart-bottom" id="cartPayment">
-    <button class="checkout" id="checkoutBtn">Ödemeye geç</button>
-    <div id="paymentForm" style="display:none;margin-top:12px">
+    <div class="cart-summary" id="cartTotal" style="display:none">
+      <div class="cart-sum-row"><span>Ara Toplam</span><span id="totalPrice">₺0.00</span></div>
+      <div class="cart-sum-row free"><span>Kargo</span><span>Ücretsiz</span></div>
+      <div class="cart-sum-row total"><span>Genel Toplam</span><span id="grandTotal">₺0.00</span></div>
+    </div>
+    <button class="checkout" id="checkoutBtn"><span>Ödemeye geç</span><i class="ch-arrow">→</i></button>
+    <div id="paymentForm" style="display:none;margin-top:14px">
+      <p class="cart-detail">Teslimat bilgilerinizi girin</p>
       <div class="field" style="margin-bottom:10px"><input id="custName" placeholder="Ad Soyad" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"></div>
       <div class="field" style="margin-bottom:10px"><input id="custEmail" type="email" placeholder="E-posta adresiniz" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"></div>
       <div class="field" style="margin-bottom:10px"><input id="custPhone" type="tel" placeholder="Telefon (5xx xxx xx xx)" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"></div>
       <div class="field" style="margin-bottom:10px"><textarea id="custAddress" placeholder="Adres (mahalle, cadde, sokak, no)" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;resize:vertical;min-height:50px"></textarea></div>
       <div class="field" style="display:flex;gap:10px;margin-bottom:10px"><input id="custProvince" placeholder="İl" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"><input id="custDistrict" placeholder="İlçe" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"></div>
       <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#4a4340;margin:8px 0;line-height:1.4"><input type="checkbox" id="kvkkCheck"> <a href="kvkk.html" target="_blank" style="color:var(--copper)">KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum.</label>
-      <button class="checkout" id="payBtn" style="margin-top:4px">iyzico ile Öde</button>
+      <button class="checkout pay-btn" id="payBtn">iyzico ile Öde</button>
       <div id="payStatus" style="font-size:12px;margin-top:8px;text-align:center;color:#7a736c"></div>
     </div>
   </div>
