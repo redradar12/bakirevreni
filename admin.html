@@ -175,7 +175,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Sıra</th><th>Kategori Adı</th><th>Grup</th><th>Görsel</th><th>İşlem</th></tr></thead>
+            <thead><tr><th>Kategori Adı</th><th>Grup</th><th>Görsel</th><th>İşlem</th></tr></thead>
             <tbody id="catTableBody"></tbody>
           </table>
           <div class="empty" id="catEmpty">Henüz kategori eklenmemiş.</div>
@@ -190,7 +190,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Sıra</th><th>Ürün Adı</th><th>Kategori</th><th>Fiyat</th><th>İndirim</th><th>Rozet</th><th>Görsel</th><th>İşlem</th></tr></thead>
+            <thead><tr><th>Ürün Adı</th><th>Kategori</th><th>Fiyat</th><th>İndirim</th><th>Rozet</th><th>Görsel</th><th>İşlem</th></tr></thead>
             <tbody id="prodTableBody"></tbody>
           </table>
           <div class="empty" id="prodEmpty">Henüz ürün eklenmemiş.</div>
@@ -351,7 +351,6 @@ async function loadCategories() {
   data.forEach(c => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${c.sort_order ?? '-'}</td>
       <td><strong>${c.name}</strong></td>
       <td><span class="tag">${c.group_name}</span></td>
       <td>${c.image_url ? `<img src="${c.image_url}" class="image-preview">` : '<span class="img-placeholder">—</span>'}</td>
@@ -370,7 +369,7 @@ $('#addCatBtn').onclick = () => openCategoryModal(null);
 async function openCategoryModal(id) {
   editingId = id || null;
   editingType = 'category';
-  let cat = { name: '', slug: '', group_name: '', image_url: '', sort_order: 0 };
+  let cat = { name: '', group_name: '', image_url: '' };
   if (id) {
     const { data } = await _sb.from('categories').select('*').eq('id', id).single();
     if (data) cat = data;
@@ -379,10 +378,8 @@ async function openCategoryModal(id) {
   m.innerHTML = `
     <h3>${id ? 'Kategori Düzenle' : 'Yeni Kategori'}</h3>
     <div class="field"><label>Kategori Adı</label><input id="fCatName" value="${cat.name}"></div>
-    <div class="field"><label>Slug (URL)</label><input id="fCatSlug" value="${cat.slug}" placeholder="ornek-slug"></div>
     <div class="field"><label>Grup Adı</label><input id="fCatGroup" value="${cat.group_name}" placeholder="İçecek &amp; Kahve"></div>
     <div class="field"><label>Görsel</label><div class="upload-row"><input id="fCatImg" value="${cat.image_url || ''}" placeholder="assets/ornek.jpg"><button type="button" class="upload-btn" onclick="document.getElementById('fCatUp').click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fCatUp" onchange="uploadFile('fCatUp','fCatImg')" hidden></button></div></div>
-    <div class="field"><label>Sıra</label><input id="fCatOrder" type="number" value="${cat.sort_order || 0}"></div>
     <div class="modal-actions">
       <button class="cancel" onclick="closeModal()">İptal</button>
       <button class="primary" id="saveCatBtn">Kaydet</button>
@@ -394,13 +391,11 @@ async function openCategoryModal(id) {
 async function saveCategory() {
   const data = {
     name: $('#fCatName').value.trim(),
-    slug: $('#fCatSlug').value.trim() || $('#fCatName').value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''),
+    slug: $('#fCatName').value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''),
     group_name: $('#fCatGroup').value.trim(),
-    image_url: $('#fCatImg').value.trim() || null,
-    sort_order: parseInt($('#fCatOrder').value) || 0
+    image_url: $('#fCatImg').value.trim() || null
   };
   if (!data.name) { say('Kategori adı gerekli.'); return; }
-  if (!data.slug) { say('Slug gerekli.'); return; }
 
   const { error } = editingId
     ? await _sb.from('categories').update(data).eq('id', editingId)
@@ -431,9 +426,8 @@ async function loadProducts() {
   empty.style.display = 'none';
   data.forEach(p => {
     const tr = document.createElement('tr');
-    const badgeHtml = p.badge ? (p.badge === 'ÇOK SATAN' ? '<span class="badge-pill seller">ÇOK SATAN</span>' : '<span class="badge-pill new">YENİ</span>') : '';
+    const badgeHtml = p.badge === 'YENİ' ? '<span class="badge-pill new">YENİ</span>' : (p.is_bestseller ? '<span class="badge-pill seller">ÇOK SATAN</span>' : '');
     tr.innerHTML = `
-      <td>${p.sort_order ?? '-'}</td>
       <td><strong>${p.name}</strong></td>
       <td><span class="tag">${p.categories?.name || '-'}</span></td>
       <td>${p.price ? p.price.toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</td>
@@ -455,7 +449,7 @@ $('#addProdBtn').onclick = () => openProductModal(null);
 async function openProductModal(id) {
   editingId = id || null;
   editingType = 'product';
-  let prod = { name: '', slug: '', description: '', price: 0, old_price: null, category_id: '', image_url: '', badge: '', is_bestseller: false, is_new: false, sort_order: 0 };
+  let prod = { name: '', description: '', price: 0, old_price: null, category_id: '', image_url: '', badge: '', is_bestseller: false, is_new: false };
   if (id) {
     const { data } = await _sb.from('products').select('*').eq('id', id).single();
     if (data) prod = data;
@@ -464,15 +458,12 @@ async function openProductModal(id) {
   const { data: cats } = await _sb.from('categories').select('id,name,group_name').order('group_name').order('name');
   const catOptions = (cats || []).map(c => `<option value="${c.id}" ${prod.category_id === c.id ? 'selected' : ''}>${c.group_name} — ${c.name}</option>`).join('');
 
-  const badgeOpts = ['', 'ÇOK SATAN', 'YENİ'].map(b => `<option value="${b}" ${prod.badge === b ? 'selected' : ''}>${b || 'Yok'}</option>`).join('');
+  const badgeOpts = ['', 'YENİ'].map(b => `<option value="${b}" ${prod.badge === b ? 'selected' : ''}>${b || 'Yok'}</option>`).join('');
 
   const m = $('#modalContent');
   m.innerHTML = `
     <h3>${id ? 'Ürün Düzenle' : 'Yeni Ürün'}</h3>
-    <div class="row">
-      <div class="field"><label>Ürün Adı</label><input id="fProdName" value="${prod.name}"></div>
-      <div class="field"><label>Slug</label><input id="fProdSlug" value="${prod.slug}" placeholder="urun-adi"></div>
-    </div>
+    <div class="field"><label>Ürün Adı</label><input id="fProdName" value="${prod.name}"></div>
     <div class="field"><label>Açıklama</label><textarea id="fProdDesc">${prod.description || ''}</textarea></div>
     <div class="row">
       <div class="field"><label>Fiyat (₺)</label><input id="fProdPrice" type="number" step="0.01" value="${prod.price || 0}"></div>
@@ -484,7 +475,6 @@ async function openProductModal(id) {
     </div>
     <div class="field"><label>Görsel</label><div class="upload-row"><input id="fProdImg" value="${prod.image_url || ''}" placeholder="assets/urun.jpg"><button type="button" class="upload-btn" onclick="document.getElementById('fProdUp').click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fProdUp" onchange="uploadFile('fProdUp','fProdImg')" hidden></button></div></div>
     <div class="row">
-      <div class="field"><label>Sıra</label><input id="fProdOrder" type="number" value="${prod.sort_order || 0}"></div>
       <div class="field"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:8px;padding-top:8px;text-transform:none;font-weight:400;font-size:13px"><input type="checkbox" id="fProdBest" ${prod.is_bestseller ? 'checked' : ''}> Çok satan</label></div>
       <div class="field"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:8px;padding-top:8px;text-transform:none;font-weight:400;font-size:13px"><input type="checkbox" id="fProdNew" ${prod.is_new ? 'checked' : ''}> Yeni</label></div>
     </div>
@@ -499,7 +489,7 @@ async function openProductModal(id) {
 async function saveProduct() {
   const data = {
     name: $('#fProdName').value.trim(),
-    slug: $('#fProdSlug').value.trim() || $('#fProdName').value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''),
+    slug: $('#fProdName').value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''),
     description: $('#fProdDesc').value.trim() || null,
     price: parseFloat($('#fProdPrice').value) || 0,
     old_price: $('#fProdOld').value ? parseFloat($('#fProdOld').value) : null,
@@ -507,11 +497,9 @@ async function saveProduct() {
     image_url: $('#fProdImg').value.trim() || null,
     badge: $('#fProdBadge').value || null,
     is_bestseller: $('#fProdBest').checked,
-    is_new: $('#fProdNew').checked,
-    sort_order: parseInt($('#fProdOrder').value) || 0
+    is_new: $('#fProdNew').checked
   };
   if (!data.name) { say('Ürün adı gerekli.'); return; }
-  if (!data.slug) { say('Slug gerekli.'); return; }
 
   const { error } = editingId
     ? await _sb.from('products').update(data).eq('id', editingId)
