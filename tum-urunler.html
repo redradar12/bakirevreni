@@ -32,8 +32,28 @@
     <div class="footer-bottom"><small>© 2026 Bakır Evreni</small></div>
   </footer>
 
-  <div class="overlay" id="overlay"></div>
-  <aside class="cart-drawer" id="cartDrawer"><button class="close" data-close>×</button><h2>Sepetiniz</h2><div id="cartItems"><p class="empty">Sepetiniz henüz boş.</p></div><div class="cart-bottom"><p>Ödeme altyapısı (iyzico) yakında eklenecektir.</p><button class="checkout">Ödemeye geç</button></div></aside>
+  <div class="overlay" id="overlay"></div><aside class="cart-drawer" id="cartDrawer">
+  <button class="close" data-close>×</button>
+  <h2>Sepetiniz</h2>
+  <div id="cartItems"><p class="empty">Sepetiniz henüz boş.</p></div>
+  <div id="cartTotal" style="padding:12px 20px;border-top:1px solid var(--line);font-weight:700;display:none">Toplam: <span id="totalPrice">₺0.00</span></div>
+  <div class="cart-bottom" id="cartPayment">
+    <button class="checkout" id="checkoutBtn">Ödemeye geç</button>
+    <div id="paymentForm" style="display:none;margin-top:12px">
+      <div class="field" style="margin-bottom:10px"><input id="cardName" placeholder="Kart üzerindeki isim" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"></div>
+      <div class="field" style="margin-bottom:10px"><input id="cardNumber" placeholder="Kart numarası" maxlength="19" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace"></div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <input id="cardMonth" placeholder="AA" maxlength="2" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace">
+        <input id="cardYear" placeholder="YY" maxlength="2" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace">
+        <input id="cardCvc" placeholder="CVC" maxlength="4" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;font-family:monospace">
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#4a4340;margin:8px 0;line-height:1.4"><input type="checkbox" id="kvkkCheck"> <a href="kvkk.html" target="_blank" style="color:var(--copper)">KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum.</label>
+      <button class="checkout" id="payBtn" style="margin-top:4px">💳 Ödemeyi Tamamla</button>
+      <div id="payStatus" style="font-size:12px;margin-top:8px;text-align:center;color:#7a736c"></div>
+    </div>
+  </div>
+</aside>
+  <div class="search-modal" id="searchModal"><button class="close" data-close>×</button><label for="searchInput">Ne arıyorsunuz?</label><input id="searchInput" autocomplete="off" placeholder="Ürün ara..." /><p>Örneğin: cezve, matara, semaver, bardak</p></div>
   <div class="toast" id="toast"></div>
 
   <script src="./script.js"></script>
