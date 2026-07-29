@@ -253,7 +253,7 @@ async function uploadFile(fileInputId, targetInputId) {
   const { data, error } = await _sb.storage.from('bakir').upload(path, blob, { contentType: 'image/webp' });
   if (error) { say('Yükleme hatası: ' + error.message); btn.innerHTML = '<span>📷</span> Resim Seç<input type="file" accept="image/*" id="' + fileInputId + '">'; return; }
   const { data: { publicUrl } } = _sb.storage.from('bakir').getPublicUrl(data.path);
-  $(targetInputId).value = publicUrl;
+   document.getElementById(targetInputId).value = publicUrl;
   btn.innerHTML = '<span>📷</span> Resim Seç<input type="file" accept="image/*" id="' + fileInputId + '">';
   say('Resim yüklendi (' + (blob.size / 1024).toFixed(0) + ' KB).');
 }
