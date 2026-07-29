@@ -233,9 +233,9 @@ let editingId = null;
 let editingType = null;
 
 async function uploadFile(fileInputId, targetInputId) {
-  const file = $(fileInputId).files[0];
+  const file = document.getElementById(fileInputId).files[0];
   if (!file) return;
-  const btn = $(fileInputId).parentElement;
+  const btn = document.getElementById(fileInputId).parentElement;
   btn.innerHTML = '<span class="upload-spinner"></span> Sıkıştırılıyor...';
   const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = URL.createObjectURL(file) });
   const maxW = 900, maxH = 900;
