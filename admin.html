@@ -389,17 +389,19 @@ async function openCategoryModal(id) {
 }
 
 async function saveCategory() {
+  const nameVal = $('#fCatName').value.trim();
   const data = {
-    name: $('#fCatName').value.trim(),
-    slug: $('#fCatName').value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''),
+    name: nameVal,
     group_name: $('#fCatGroup').value.trim(),
     image_url: $('#fCatImg').value.trim() || null
   };
+  // Only generate and set slug for NEW categories. Do not overwrite slug on edits to avoid breaking existing links.
+  const generatedSlug = nameVal.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
   if (!data.name) { say('Kategori adı gerekli.'); return; }
 
   const { error } = editingId
     ? await _sb.from('categories').update(data).eq('id', editingId)
-    : await _sb.from('categories').insert(data);
+    : await _sb.from('categories').insert(Object.assign({}, data, { slug: generatedSlug }));
 
   closeModal();
   if (error) { say('Hata: ' + error.message); return; }
