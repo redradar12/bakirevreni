@@ -17,7 +17,8 @@ serve(async (req) => {
 
   const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0)
 
-  const rnd = iyzioRnd()
+  const rnd = Date.now().toString() + Math.random().toString(36).slice(2, 10)
+
   const payment = {
     locale: 'tr',
     conversationId: Date.now().toString(),
@@ -28,6 +29,7 @@ serve(async (req) => {
     basketId: 'B' + Date.now(),
     paymentChannel: 'WEB',
     paymentGroup: 'PRODUCT',
+    randomString: rnd,
     paymentCard: {
       cardHolderName: card.name,
       cardNumber: card.number.replace(/\s/g, ''),
@@ -71,10 +73,14 @@ serve(async (req) => {
     })),
   }
 
-  const hashStr = apiKey + payment.conversationId + payment.price + payment.paidPrice + rnd + payment.currency + secretKey
-  const hash = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(hashStr)).then(b => Array.from(new Uint8Array(b)).map(b => b.toString(16).padStart(2, '0')).join(''))
+  const hashStr = apiKey + payment.conversationId + payment.price + payment.paidPrice + payment.randomString + payment.currency + secretKey
 
-  const body = { ...payment, randomString: rnd, signature: hash }
+  const enc = new TextEncoder().encode(hashStr)
+  const buf = await crypto.subtle.digest('SHA-1', enc)
+  const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+
+  const body = { ...payment, signature: hash }
+
   const isSandbox = Deno.env.get('IYZICO_SANDBOX') === 'true'
   const base = isSandbox ? 'https://sandbox-api.iyzipay.com' : 'https://api.iyzipay.com'
 
@@ -93,5 +99,3 @@ serve(async (req) => {
     status: result.status === 'success' ? 200 : 400,
   })
 })
-
-function iyzioRnd() { return Date.now().toString() + Math.random().toString(36).slice(2, 10) }
