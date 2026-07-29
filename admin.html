@@ -190,7 +190,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Ürün Adı</th><th>Kategori</th><th>Fiyat</th><th>İndirim</th><th>Rozet</th><th>Görsel</th><th>İşlem</th></tr></thead>
+            <thead><tr><th>Ürün Adı</th><th>Kategori</th><th>Satış Fiyatı</th><th>Normal Fiyat</th><th>Rozet</th><th>Görsel</th><th>İşlem</th></tr></thead>
             <tbody id="prodTableBody"></tbody>
           </table>
           <div class="empty" id="prodEmpty">Henüz ürün eklenmemiş.</div>
@@ -466,8 +466,8 @@ async function openProductModal(id) {
     <div class="field"><label>Ürün Adı</label><input id="fProdName" value="${prod.name}"></div>
     <div class="field"><label>Açıklama</label><textarea id="fProdDesc">${prod.description || ''}</textarea></div>
     <div class="row">
-      <div class="field"><label>Fiyat (₺)</label><input id="fProdPrice" type="number" step="0.01" value="${prod.price || 0}"></div>
-      <div class="field"><label>İndirimli Fiyat (₺)</label><input id="fProdOld" type="number" step="0.01" value="${prod.old_price || ''}"></div>
+      <div class="field"><label>Satış Fiyatı (₺)</label><input id="fProdPrice" type="number" step="0.01" value="${prod.price || 0}"></div>
+      <div class="field"><label>Normal Fiyat (₺)</label><input id="fProdOld" type="number" step="0.01" value="${prod.old_price || ''}"></div>
     </div>
     <div class="row">
       <div class="field"><label>Kategori</label><select id="fProdCat">${catOptions}</select></div>
