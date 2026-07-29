@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ödeme Sonucu — Bakır Evreni</title>
+<link rel="icon" href="data:,">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',sans-serif;background:#f8f6f2;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:48px 32px;text-align:center;max-width:420px;width:100%}
+.icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:32px;color:#fff;font-weight:700}
+.icon.ok{background:#0e8345}
+.icon.fail{background:#c0392b}
+h2{font-size:22px;margin-bottom:8px;color:#1a1a1a}
+p{font-size:14px;color:#555;line-height:1.5;margin-bottom:20px}
+.btn{display:inline-block;padding:12px 32px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;background:#292622;transition:background .2s}
+.btn:hover{background:#a85d38}
+.loading{color:#888}
+</style>
+</head>
+<body>
+<div class="card" id="resultCard">
+  <div class="loading" id="statusMsg">Ödeme sonucu kontrol ediliyor...</div>
+</div>
+<script>
+(async()=>{
+  const p=new URLSearchParams(location.search);
+  const token=p.get('token');
+  const status=p.get('status');
+  const card=document.getElementById('resultCard');
+  const msg=document.getElementById('statusMsg');
+
+  if(!token||status==='failure'){
+    card.innerHTML='<div class="icon fail">✕</div><h2>Ödeme Başarısız</h2><p>İşlem tamamlanamadı. Lütfen tekrar deneyin.</p><a class="btn" href="./">Ana Sayfaya Dön</a>';
+    return;
+  }
+
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqbXlxYWRjcXBheGxicGZuemphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNjA1ODgsImV4cCI6MjEwMDgzNjU4OH0.q_UJivzLt-UPJZ90AfkSXx1fRByNtf1GMjcUmV-1HJs';
+  const SB_URL='https://xjmyqadcqpaxlbpfnzja.supabase.co';
+
+  try{
+    const r=await fetch(SB_URL+'/functions/v1/iyzico-checkout-result',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
+      body:JSON.stringify({token})
+    });
+    const j=await r.json();
+    if(j.status==='success'){
+      // Save order from sessionStorage
+      let cart=[],buyer={};
+      try{
+        const c=sessionStorage.getItem('pendingCart');
+        const b=sessionStorage.getItem('pendingBuyer');
+        if(c)cart=JSON.parse(c);
+        if(b)buyer=JSON.parse(b);
+      }catch(e){}
+      if(cart.length){
+        const items=cart.map(i=>({name:i.name,price:i.price,qty:i.qty||1}));
+        const total=items.reduce((s,i)=>s+i.price*i.qty,0);
+        try{
+          await fetch(SB_URL+'/rest/v1/orders',{
+            method:'POST',
+            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+            body:JSON.stringify({
+              items,total,
+              customer_name:buyer.name||buyer.email||'',
+              customer_email:buyer.email||'',
+              customer_phone:buyer.phone||'',
+              customer_address:buyer.address||'',
+              customer_city:buyer.city||'',
+              payment_id:j.paymentId||j.conversationId||'',
+              payment_status:'success'
+            })
+          });
+        }catch(e){}
+        sessionStorage.removeItem('pendingCart');
+        sessionStorage.removeItem('pendingBuyer');
+      }
+      card.innerHTML='<div class="icon ok">✓</div><h2>Ödeme Başarılı!</h2><p>Siparişiniz alındı. En kısa sürede kargoya verilecektir.</p><a class="btn" href="./">Ana Sayfaya Dön</a>';
+    } else {
+      card.innerHTML='<div class="icon fail">✕</div><h2>Ödeme Başarısız</h2><p>'+(j.errorMessage||j.error||'İşlem doğrulanamadı.')+'</p><a class="btn" href="./">Ana Sayfaya Dön</a>';
+    }
+  }catch(e){
+    card.innerHTML='<div class="icon fail">✕</div><h2>Bağlantı Hatası</h2><p>Ödeme sonucu kontrol edilemedi. Lütfen bizimle iletişime geçin.</p><a class="btn" href="./">Ana Sayfaya Dön</a>';
+  }
+})();
+</script>
+</body>
+</html>
