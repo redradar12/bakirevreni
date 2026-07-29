@@ -30,28 +30,48 @@ function showProduct(id){
   if(!m)return;
   m.querySelector('.pm-img').src=img;
   m.querySelector('.pm-img').alt=p.name||'';
-  m.querySelector('.pm-badge').textContent=p.badge||'';
-  m.querySelector('.pm-badge').style.display=p.badge?'':'none';
+  const badge=m.querySelector('.pm-badge');
+  if(badge){badge.textContent=p.badge||'';badge.style.display=p.badge?'':'none'}
   m.querySelector('.pm-name').textContent=p.name||'';
   m.querySelector('.pm-type').textContent=p.type||'';
+  const disc=m.querySelector('.pm-discount');
+  if(disc){
+    let pct='';
+    if(oldp&&Number(oldp)>Number(price))pct=Math.round((1-Number(price)/Number(oldp))*100);
+    if(pct){disc.textContent='−%'+pct;disc.classList.add('show')}else{disc.classList.remove('show')}
+  }
   m.querySelector('.pm-price').innerHTML=`₺${price}${oldp?` <del>₺${oldp}</del>`:''}`;
-  m.querySelector('.pm-desc').textContent=p.description||p.desc||'Açıklama bulunamadı.';
+  const fullDesc=p.description||p.desc||'';
+  const shortEl=m.querySelector('.pm-short');
+  if(shortEl){
+    const first=(fullDesc.split(/(?<=[.!?])\s+/)[0])||'';
+    if(first&&first.trim().length<fullDesc.trim().length){shortEl.textContent=first;shortEl.classList.add('show')}else{shortEl.classList.remove('show')}
+  }
+  m.querySelector('.pm-desc').textContent=fullDesc||'Açıklama bulunamadı.';
+  const rev=m.querySelector('.pm-reviews');
+  if(rev){const rc=p.review_count||p.reviews||0;rev.textContent=rc?rc+' değerlendirme':'İlk yorumu siz yapın';rev.onclick=null}
   m.querySelector('.pm-add').dataset.product=(p.name||'').replace(/"/g,'&quot;');
   m.querySelector('.pm-add').dataset.price=price;
   const qtyEl=m.querySelector('.pm-qty');
   if(qtyEl)qtyEl.value=1;
-  // Gallery
   const gal=m.querySelector('.pm-gallery');
+  const thumbs=m.querySelector('.pm-thumbs');
+  const syncThumbs=(i)=>{if(!thumbs)return;thumbs.querySelectorAll('.pm-thumb').forEach(t=>t.classList.toggle('active',parseInt(t.dataset.i)===i))};
   if(gal&&imgs.length>1){
     const dots=imgs.map((_,i)=>`<span class="pm-dot${i===0?' active':''}" data-i="${i}"></span>`).join('');
     gal.innerHTML=`<button class="pm-gal-btn pm-prev" data-dir="-1">◀</button><div class="pm-dots">${dots}</div><button class="pm-gal-btn pm-next" data-dir="1">▶</button>`;
     gal.style.display='flex';
+    if(thumbs)thumbs.innerHTML=imgs.map((s,i)=>`<img src="${s}" class="pm-thumb${i===0?' active':''}" data-i="${i}" alt="">`).join('');
     gal._imgs=imgs;
     gal._idx=0;
     m.querySelector('.pm-img').src=imgs[0];
-    gal.querySelectorAll('.pm-dot').forEach(d=>d.onclick=function(){const i=parseInt(this.dataset.i);showGalImg(m,gal,i)});
-    gal.querySelectorAll('.pm-gal-btn').forEach(b=>b.onclick=function(){const i=gal._idx+parseInt(this.dataset.dir);if(i>=0&&i<imgs.length)showGalImg(m,gal,i)});
-  }else if(gal){gal.style.display='none'}
+    gal.querySelectorAll('.pm-dot').forEach(d=>d.onclick=function(){const i=parseInt(this.dataset.i);showGalImg(m,gal,i);syncThumbs(i)});
+    gal.querySelectorAll('.pm-gal-btn').forEach(b=>b.onclick=function(){const i=gal._idx+parseInt(this.dataset.dir);if(i>=0&&i<imgs.length){showGalImg(m,gal,i);syncThumbs(i)}});
+    if(thumbs)thumbs.querySelectorAll('.pm-thumb').forEach(t=>t.onclick=function(){const i=parseInt(this.dataset.i);showGalImg(m,gal,i);syncThumbs(i)});
+  }else{
+    if(gal)gal.style.display='none';
+    if(thumbs)thumbs.innerHTML='';
+  }
   m.classList.add('open');
   if(overlay)overlay.classList.add('show');
 }
