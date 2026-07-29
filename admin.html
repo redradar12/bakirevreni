@@ -415,6 +415,11 @@ async function saveCategory() {
 
 async function deleteCategory(id) {
   if (!confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) return;
+  const { data: cat, error: getErr } = await _sb.from('categories').select('image_url').eq('id', id).single();
+  if (cat?.image_url?.startsWith(supabaseUrl)) {
+    const path = cat.image_url.split('/').pop();
+    await _sb.storage.from('bakir').remove([path]);
+  }
   const { error } = await _sb.from('categories').delete().eq('id', id);
   if (error) { say('Silme hatası: ' + error.message); return; }
   say('Kategori silindi.');
@@ -513,6 +518,11 @@ async function saveProduct() {
 
 async function deleteProduct(id) {
   if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
+  const { data: prod, error: getErr } = await _sb.from('products').select('image_url').eq('id', id).single();
+  if (prod?.image_url?.startsWith(supabaseUrl)) {
+    const path = prod.image_url.split('/').pop();
+    await _sb.storage.from('bakir').remove([path]);
+  }
   const { error } = await _sb.from('products').delete().eq('id', id);
   if (error) { say('Silme hatası: ' + error.message); return; }
   say('Ürün silindi.');
