@@ -3,7 +3,7 @@ import { serve } from 'https://deno.land/std@0.208.0/http/server.ts'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-iyzi-rnd',
 }
 
 serve(async (req) => {
@@ -16,7 +16,6 @@ serve(async (req) => {
   if (!apiKey || !secretKey) return new Response(JSON.stringify({ error: 'Ödeme ayarları yapılmamış.' }), { status: 400, headers: corsHeaders })
 
   const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0)
-
   const rnd = Date.now().toString() + Math.random().toString(36).slice(2, 10)
 
   const payment = {
@@ -29,7 +28,6 @@ serve(async (req) => {
     basketId: 'B' + Date.now(),
     paymentChannel: 'WEB',
     paymentGroup: 'PRODUCT',
-    randomString: rnd,
     paymentCard: {
       cardHolderName: card.name,
       cardNumber: card.number.replace(/\s/g, ''),
@@ -73,24 +71,30 @@ serve(async (req) => {
     })),
   }
 
-  const hashStr = apiKey + payment.conversationId + payment.price + payment.paidPrice + payment.randomString + payment.currency + secretKey
-
-  const enc = new TextEncoder().encode(hashStr)
-  const buf = await crypto.subtle.digest('SHA-1', enc)
-  const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
-
-  const body = { ...payment, signature: hash }
-
   const isSandbox = Deno.env.get('IYZICO_SANDBOX') === 'true'
   const base = isSandbox ? 'https://sandbox-api.iyzipay.com' : 'https://api.iyzipay.com'
+  const uriPath = '/payment/auth'
+  const bodyStr = JSON.stringify(payment)
 
-  const res = await fetch(base + '/payment/auth', {
+  // HMACSHA256 v2 authentication
+  const payload = rnd + uriPath + bodyStr
+  const enc = new TextEncoder().encode(payload)
+  const keyData = new TextEncoder().encode(secretKey)
+  const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const sig = await crypto.subtle.sign('HMAC', cryptoKey, enc)
+  const encryptedData = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
+
+  const authStr = 'apiKey:' + apiKey + '&randomKey:' + rnd + '&signature:' + encryptedData
+  const base64Auth = btoa(authStr)
+
+  const res = await fetch(base + uriPath, {
     method: 'POST',
     headers: {
-      'Authorization': 'IYZWS ' + btoa(apiKey + ':' + secretKey),
+      'Authorization': 'IYZWSv2 ' + base64Auth,
+      'x-iyzi-rnd': rnd,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
+    body: bodyStr,
   })
 
   const result = await res.json()
