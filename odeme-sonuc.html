@@ -82,7 +82,9 @@ p{font-size:14px;color:#555;line-height:1.5;margin-bottom:20px}
               customer_district:buyer.district||'',
               customer_province:buyer.province||'',
               payment_id:j.paymentId||j.conversationId||'',
-              payment_status:'success'
+              payment_status:'success',
+              payment_method:'iyzico',
+              order_status:'pending'
             })
           });
         }catch(e){}

@@ -131,6 +131,8 @@ CREATE TABLE IF NOT EXISTS orders (
   customer_city text,
   payment_id text,
   payment_status text DEFAULT 'success',
+  payment_method text DEFAULT 'iyzico',
+  order_status text DEFAULT 'pending',
   created_at timestamptz DEFAULT now()
 );
 
@@ -152,6 +154,12 @@ CREATE POLICY "Siparişleri admin siler" ON orders
     auth.role() = 'authenticated'
   );
 
+DROP POLICY IF EXISTS "Siparişleri admin günceller" ON orders;
+CREATE POLICY "Siparişleri admin günceller" ON orders
+  FOR UPDATE USING (
+    auth.role() = 'authenticated'
+  );
+
 -- Mevcut tabloya eksik kolonları ekle (tablo zaten oluştuysa hata vermez)
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email text;
@@ -160,6 +168,12 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_city text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_district text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_province text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method text DEFAULT 'iyzico';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_status text DEFAULT 'pending';
+-- Admin güncelleme yetkisi (mevcut DB için)
+DROP POLICY IF EXISTS "Siparişleri admin günceller" ON orders;
+CREATE POLICY "Siparişleri admin günceller" ON orders
+  FOR UPDATE USING (auth.role() = 'authenticated');
 -- Mevcut veriler için benzersiz index (order_number daha önce eklenmişse)
 DROP INDEX IF EXISTS idx_orders_order_number;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number) WHERE order_number IS NOT NULL;

@@ -207,7 +207,7 @@
         <div class="page-header"><h2>Siparişler</h2></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Sipariş No</th><th>Tarih</th><th>Ürünler</th><th>Toplam</th><th>Müşteri</th><th>İletişim</th><th>Adres</th><th>Durum</th><th>İşlem</th></tr></thead>
+            <thead><tr><th>Sipariş No</th><th>Tarih</th><th>Ürünler</th><th>Toplam</th><th>Müşteri</th><th>İletişim</th><th>Adres</th><th>Ödeme</th><th>Durum</th><th>İşlem</th></tr></thead>
             <tbody id="orderTableBody"></tbody>
           </table>
           <div class="empty" id="orderEmpty">Henüz sipariş yok.</div>
@@ -585,6 +585,8 @@ async function loadOrders() {
   data.forEach(o => {
     const tr = document.createElement('tr');
     const items = (o.items || []).map(i => `${i.name} x${i.qty || 1}`).join(', ');
+    const status = o.order_status || 'pending';
+    const statusOptions = ['pending','paid','shipped'].map(s => `<option value="${s}" ${status===s?'selected':''}>${s==='pending'?'Bekliyor':s==='paid'?'Ödeme Alındı':'Kargoya Verildi'}</option>`).join('');
     tr.innerHTML = `
       <td><strong style="color:#a85d38">${o.order_number || '-'}</strong></td>
       <td>${new Date(o.created_at).toLocaleDateString('tr-TR')} ${new Date(o.created_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}</td>
@@ -593,11 +595,13 @@ async function loadOrders() {
       <td>${o.customer_name || '-'}</td>
       <td style="font-size:11px">${o.customer_email || ''}${o.customer_phone ? '<br>'+o.customer_phone : ''}</td>
       <td style="font-size:11px;max-width:180px;white-space:normal">${o.customer_address || ''}${o.customer_district ? ' '+o.customer_district : ''}${o.customer_province ? '/'+o.customer_province : ''}${o.customer_city ? ', '+o.customer_city : ''}</td>
-      <td><span class="badge-pill ${o.payment_status === 'success' ? 'seller' : 'new'}">${o.payment_status === 'success' ? 'Başarılı' : o.payment_status === 'pending' ? 'Bekliyor' : o.payment_status}</span></td>
+      <td><span class="badge-pill ${o.payment_method==='havale'?'seller':'new'}">${o.payment_method==='havale'?'Havale':'iyzico'}</span></td>
+      <td><select class="status-select" data-id="${o.id}" style="font-size:11px;padding:3px 6px;border-radius:4px;border:1px solid #ded8d0">${statusOptions}</select></td>
       <td class="actions-cell"><button class="delete" data-id="${o.id}">Sil</button></td>`;
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('.delete').forEach(b => b.onclick = () => deleteOrder(b.dataset.id));
+  tbody.querySelectorAll('.status-select').forEach(s => s.onchange = () => updateOrderStatus(s.dataset.id, s.value));
 }
 
 /* ========== DELETE ORDER ========== */
@@ -607,6 +611,13 @@ async function deleteOrder(id) {
   if (error) { say('Silme hatası: ' + error.message); return; }
   say('Sipariş silindi.');
   loadOrders();
+}
+
+/* ========== UPDATE ORDER STATUS ========== */
+async function updateOrderStatus(id, status) {
+  const { error } = await _sb.from('orders').update({ order_status: status }).eq('id', id);
+  if (error) { say('Güncelleme hatası: ' + error.message); return; }
+  say('Durum güncellendi.');
 }
 
 /* ========== SETTINGS ========== */
