@@ -593,7 +593,7 @@ async function loadOrders() {
       <td>${o.customer_name || '-'}</td>
       <td style="font-size:11px">${o.customer_email || ''}${o.customer_phone ? '<br>'+o.customer_phone : ''}</td>
       <td style="font-size:11px;max-width:180px;white-space:normal">${o.customer_address || ''}${o.customer_district ? ' '+o.customer_district : ''}${o.customer_province ? '/'+o.customer_province : ''}${o.customer_city ? ', '+o.customer_city : ''}</td>
-      <td><span class="badge-pill seller">${o.payment_status === 'success' ? 'Başarılı' : o.payment_status}</span></td>
+      <td><span class="badge-pill ${o.payment_status === 'success' ? 'seller' : 'new'}">${o.payment_status === 'success' ? 'Başarılı' : o.payment_status === 'pending' ? 'Bekliyor' : o.payment_status}</span></td>
       <td class="actions-cell"><button class="delete" data-id="${o.id}">Sil</button></td>`;
     tbody.appendChild(tr);
   });
