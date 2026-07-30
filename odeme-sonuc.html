@@ -59,10 +59,20 @@ p{font-size:14px;color:#555;line-height:1.5;margin-bottom:20px}
         const items=cart.map(i=>({name:i.name,price:i.price,qty:i.qty||1}));
         const total=items.reduce((s,i)=>s+i.price*i.qty,0);
         try{
+          // Sıradaki sipariş numarasını al
+          let orderNumber='';
+          try{
+            const onr=await fetch(SB_URL+'/rest/v1/rpc/get_next_order_number',{
+              method:'POST',
+              headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}
+            });
+            if(onr.ok)orderNumber=await onr.json();
+          }catch(e){}
           await fetch(SB_URL+'/rest/v1/orders',{
             method:'POST',
-            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
             body:JSON.stringify({
+              order_number:orderNumber||null,
               items,total,
               customer_name:buyer.name||buyer.email||'',
               customer_email:buyer.email||'',

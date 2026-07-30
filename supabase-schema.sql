@@ -110,9 +110,18 @@ DROP POLICY IF EXISTS "Herkes resim görebilir" ON storage.objects;
 CREATE POLICY "Herkes resim görebilir" ON storage.objects
   FOR SELECT USING (bucket_id = 'bakir');
 
+-- SİPARİŞ NUMARASI SEQUENCE (1001'den başlar)
+CREATE SEQUENCE IF NOT EXISTS order_number_seq START 1001;
+
+-- SIRADAKİ SİPARİŞ NUMARASINI DÖNDÜREN FONKSİYON
+CREATE OR REPLACE FUNCTION get_next_order_number()
+RETURNS text LANGUAGE sql AS
+$$ SELECT 'SIP-' || nextval('order_number_seq')::text; $$;
+
 -- SİPARİŞLER TABLOSU
 CREATE TABLE IF NOT EXISTS orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number text UNIQUE,
   items jsonb NOT NULL,
   total numeric(10,2) NOT NULL,
   customer_name text,
@@ -144,10 +153,16 @@ CREATE POLICY "Siparişleri admin siler" ON orders
   );
 
 -- Mevcut tabloya eksik kolonları ekle (tablo zaten oluştuysa hata vermez)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_city text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_district text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_province text;
+-- Mevcut veriler için benzersiz index (order_number daha önce eklenmişse)
+DROP INDEX IF EXISTS idx_orders_order_number;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number) WHERE order_number IS NOT NULL;
 
 -- Mevcut products tablosuna images kolonunu ekle
 ALTER TABLE products ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;

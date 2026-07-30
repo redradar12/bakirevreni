@@ -207,7 +207,7 @@
         <div class="page-header"><h2>Siparişler</h2></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Tarih</th><th>Ürünler</th><th>Toplam</th><th>Müşteri</th><th>İletişim</th><th>Adres</th><th>Durum</th><th>İşlem</th></tr></thead>
+            <thead><tr><th>Sipariş No</th><th>Tarih</th><th>Ürünler</th><th>Toplam</th><th>Müşteri</th><th>İletişim</th><th>Adres</th><th>Durum</th><th>İşlem</th></tr></thead>
             <tbody id="orderTableBody"></tbody>
           </table>
           <div class="empty" id="orderEmpty">Henüz sipariş yok.</div>
@@ -586,6 +586,7 @@ async function loadOrders() {
     const tr = document.createElement('tr');
     const items = (o.items || []).map(i => `${i.name} x${i.qty || 1}`).join(', ');
     tr.innerHTML = `
+      <td><strong style="color:#a85d38">${o.order_number || '-'}</strong></td>
       <td>${new Date(o.created_at).toLocaleDateString('tr-TR')} ${new Date(o.created_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}</td>
       <td style="max-width:200px;white-space:normal">${items}</td>
       <td><strong>${o.total ? Number(o.total).toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</strong></td>
