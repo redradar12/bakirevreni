@@ -57,7 +57,11 @@ p{font-size:14px;color:#555;line-height:1.5;margin-bottom:20px}
       }catch(e){}
       if(cart.length){
         const items=cart.map(i=>({name:i.name,price:i.price,qty:i.qty||1}));
-        const total=items.reduce((s,i)=>s+i.price*i.qty,0);
+        let total=items.reduce((s,i)=>s+i.price*i.qty,0);
+        // Kupon indirimi varsa uygula
+        let couponDsc=0;
+        try{const cd=sessionStorage.getItem('pendingCoupon');if(cd)couponDsc=parseInt(cd)}catch(e){}
+        if(couponDsc)total=total*(100-couponDsc)/100;
         try{
           // Sıradaki sipariş numarasını al
           let orderNumber='';
@@ -90,6 +94,7 @@ p{font-size:14px;color:#555;line-height:1.5;margin-bottom:20px}
         }catch(e){}
         sessionStorage.removeItem('pendingCart');
         sessionStorage.removeItem('pendingBuyer');
+        sessionStorage.removeItem('pendingCoupon');
       }
       card.innerHTML='<div class="icon ok">✓</div><h2>Ödeme Başarılı!</h2><p>Siparişiniz alındı. En kısa sürede kargoya verilecektir.</p><a class="btn" href="./">Ana Sayfaya Dön</a>';
     } else {
