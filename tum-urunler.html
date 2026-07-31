@@ -18,12 +18,20 @@
   </header>
   <div class="mobile-menu" id="mobileMenu">
     <button class="close" data-close>×</button>
+    <div class="mob-menu-cats">
+      <span class="mob-cat-title">Kategoriler</span>
+      <div class="mob-cat-group"><span class="mob-cat-group-title">İçecek &amp; Kahve</span><a data-cat href="tum-urunler.html?k=mataralar">Mataralar</a><a data-cat href="tum-urunler.html?k=surahiler">Sürahiler</a><a data-cat href="tum-urunler.html?k=bardaklar">Bardaklar</a><a data-cat href="tum-urunler.html?k=kahve-setleri">Kahve setleri &amp; fincanlar</a><a data-cat href="tum-urunler.html?k=cezveler">Cezveler</a><a data-cat href="tum-urunler.html?k=irbiklar">İbrikler</a><a data-cat href="tum-urunler.html?k=semaverler">Semaverler</a></div>
+      <div class="mob-cat-group"><span class="mob-cat-group-title">Pişirme &amp; Mutfak</span><a data-cat href="tum-urunler.html?k=tencereler">Tencereler</a><a data-cat href="tum-urunler.html?k=tavalar">Tavalar</a><a data-cat href="tum-urunler.html?k=bakrac">Bakraç (yoğurt satılı)</a><a data-cat href="tum-urunler.html?k=krom-mangallik">Krom mangallık</a></div>
+      <div class="mob-cat-group"><span class="mob-cat-group-title">Sofra &amp; Sunum</span><a data-cat href="tum-urunler.html?k=sunumluklar">Sunumluklar</a><a data-cat href="tum-urunler.html?k=tepsiler">Tepsiler</a><a data-cat href="tum-urunler.html?k=cerezlik-sekerlik">Çerezlik &amp; şekerlik</a><a data-cat href="tum-urunler.html?k=baharatlik">Baharatlık</a></div>
+      <div class="mob-cat-group"><span class="mob-cat-group-title">Dekorasyon &amp; Aydınlatma</span><a data-cat href="tum-urunler.html?k=vazolar">Vazolar</a><a data-cat href="tum-urunler.html?k=saat-samdan">Saat ve şamdan setleri</a><a data-cat href="tum-urunler.html?k=fenerler">Fenerler</a><a data-cat href="tum-urunler.html?k=samdanlar">Şamdanlar</a></div>
+      <div class="mob-cat-group"><span class="mob-cat-group-title">Aksesuarlar</span><a data-cat href="tum-urunler.html?k=aksesuarlar">Aksesuarlar</a><a data-cat href="tum-urunler.html?k=krom-mutfak">Krom mutfak aksesuarları</a></div>
+      <div class="mob-cat-group"><span class="mob-cat-group-title">Özel Koleksiyon</span><a data-cat href="tum-urunler.html?k=ozel-yapim">Özel yapım ürünlerimiz</a><a data-cat href="tum-urunler.html?k=ehlikeyfler">Ehlikeyfler</a><a data-cat href="tum-urunler.html?k=hamam-taslari">Hamam tasları</a></div>
+    </div>
     <nav>
       <a href="./index.html">Ana Sayfa</a>
-      <a href="./index.html#urunler">Tüm Ürünler</a>
-      <a href="./hakkımızda.html">Hakkımızda</a>
-      <a href="./index.html#bakir">Bakır Hakkında</a>
-      <a href="./index.html#sss">S.S.S.</a>
+      <a href="tum-urunler.html">Tüm Ürünler</a>
+      <a href="hakkımızda.html">Hakkımızda</a>
+      <a href="toptan-satis.html">Toptan Satış</a>
       <a href="./index.html#iletisim">İletişim</a>
     </nav>
   </div>
@@ -63,6 +71,7 @@
       <div class="field" style="margin-bottom:10px"><input id="custPhone" type="tel" placeholder="Telefon (5xx xxx xx xx)" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"></div>
       <div class="field" style="margin-bottom:10px"><textarea id="custAddress" placeholder="Adres (mahalle, cadde, sokak, no)" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;resize:vertical;min-height:50px"></textarea></div>
       <div class="field" style="display:flex;gap:10px;margin-bottom:10px"><input id="custProvince" placeholder="İl" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"><input id="custDistrict" placeholder="İlçe" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"></div>
+      <div class="field" style="margin-bottom:10px"><textarea id="custNote" placeholder="Sipariş notu (isteğe bağlı) — ürünle ilgili özel isteklerinizi yazabilirsiniz" style="width:100%;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px;resize:vertical;min-height:50px"></textarea></div>
       <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#4a4340;margin:8px 0;line-height:1.4"><input type="checkbox" id="kvkkCheck"> <a href="kvkk.html" target="_blank" style="color:var(--copper)">KVKK Aydınlatma Metni</a>'ni okudum, kabul ediyorum.</label>
       <p class="cart-detail" style="margin:12px 0 6px">Kupon kodu</p>
       <div style="display:flex;gap:8px;margin-bottom:8px"><input id="couponInput" placeholder="Kupon kodunuzu girin" style="flex:1;padding:10px 12px;border:1.5px solid #ded8d0;border-radius:6px;font:inherit;font-size:13px"><button id="applyCouponBtn" style="padding:10px 16px;background:#292622;color:#fff;border:0;border-radius:6px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Uygula</button></div>

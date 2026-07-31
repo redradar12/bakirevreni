@@ -57,7 +57,7 @@ CREATE POLICY "Ürünleri admin yönetir" ON products
 -- ÖRNEK VERİ: Kategoriler
 INSERT INTO categories (name, slug, group_name, image_url, sort_order) VALUES
   ('Mataralar', 'mataralar', 'İçecek & Kahve', 'assets/matara.png', 1),
-  ('Sürahiler', 'surahi̇ler', 'İçecek & Kahve', 'assets/copper-jug.jpg', 2),
+  ('Sürahiler', 'surahiler', 'İçecek & Kahve', 'assets/copper-jug.jpg', 2),
   ('Bardaklar', 'bardaklar', 'İçecek & Kahve', 'assets/coffee-set.jpg', 3),
   ('Kahve setleri & fincanlar', 'kahve-setleri', 'İçecek & Kahve', 'assets/coffee-set.jpg', 4),
   ('Cezveler', 'cezveler', 'İçecek & Kahve', 'assets/cezve-sand.jpg', 5),
@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_status text DEFAULT 'success',
   payment_method text DEFAULT 'iyzico',
   order_status text DEFAULT 'pending',
+  note text,
   created_at timestamptz DEFAULT now()
 );
 
@@ -170,6 +171,7 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_district text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_province text;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method text DEFAULT 'iyzico';
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_status text DEFAULT 'pending';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS note text;
 -- Admin güncelleme yetkisi (mevcut DB için)
 DROP POLICY IF EXISTS "Siparişleri admin günceller" ON orders;
 CREATE POLICY "Siparişleri admin günceller" ON orders
