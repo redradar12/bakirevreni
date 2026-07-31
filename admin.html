@@ -65,6 +65,14 @@
     .badge-pill.seller{background:#ffe8d6;color:#a85d38}
     .badge-pill.new{background:#d6f0e0;color:#1e7a4a}
 
+    .order-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .filter-btn{padding:7px 16px;border:1.5px solid #ded8d0;border-radius:8px;background:#fff;font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:.15s;color:#4a4340}
+    .filter-btn:hover{border-color:#a85d38;color:#a85d38}
+    .filter-btn.active{background:#292622;color:#fff;border-color:#292622}
+    .filter-btn .count{font-size:10px;margin-left:4px;opacity:.7}
+
+    .order-item-img{width:36px;height:36px;border-radius:4px;object-fit:cover;margin-right:4px;vertical-align:middle;border:1px solid #e5e0d9}
+
     .actions-cell{display:flex;gap:6px}
     .actions-cell button{border:0;padding:5px 12px;border-radius:5px;font:inherit;font-size:11px;cursor:pointer;transition:.15s}
     .actions-cell .edit{background:#f0ece6;color:#23201d}
@@ -205,6 +213,13 @@
       <!-- ORDERS -->
       <div class="page" id="page-orders">
         <div class="page-header"><h2>Siparişler</h2></div>
+        <div class="order-filters" id="orderFilters">
+          <button class="filter-btn active" data-status="all">Tümü</button>
+          <button class="filter-btn" data-status="pending">Bekliyor</button>
+          <button class="filter-btn" data-status="paid">Ödeme Alındı</button>
+          <button class="filter-btn" data-status="shipped">Kargoya Verildi</button>
+          <button class="filter-btn" data-status="completed">Tamamlandı</button>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Sipariş No</th><th>Tarih</th><th>Ürünler</th><th>Toplam</th><th>Müşteri</th><th>İletişim</th><th>Adres</th><th>Ödeme</th><th>Durum</th><th>İşlem</th></tr></thead>
@@ -574,23 +589,72 @@ function closeModal() {
 $('#modalOverlay').onclick = e => { if (e.target === $('#modalOverlay')) closeModal(); };
 
 /* ========== ORDERS ========== */
+let orderFilter = 'all';
+let allOrdersCache = [];
+let productImageMap = {};
+
 async function loadOrders() {
+  // Ürün resim haritası oluştur
+  const { data: prods } = await _sb.from('products').select('name,image_url');
+  if (prods) prods.forEach(p => { if (p.name) productImageMap[p.name] = p.image_url; });
+
   const { data, error } = await _sb.from('orders').select('*').order('created_at', { ascending: false });
+  if (error) { say('Siparişler yüklenirken hata: ' + error.message); return; }
+  allOrdersCache = data || [];
+
+  // Filtre butonlarını bağla ve sayıları güncelle
+  const filters = $('#orderFilters');
+  if (filters) {
+    filters.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        orderFilter = btn.dataset.status;
+        filters.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderOrders();
+      };
+    });
+    updateFilterCounts();
+  }
+  renderOrders();
+}
+
+function updateFilterCounts() {
+  ['all','pending','paid','shipped','completed'].forEach(s => {
+    const btn = document.querySelector(`.filter-btn[data-status="${s}"]`);
+    if (!btn) return;
+    const existing = btn.querySelector('.count');
+    if (existing) existing.remove();
+    const count = s === 'all' ? allOrdersCache.length : allOrdersCache.filter(o => (o.order_status||'pending') === s).length;
+    if (count > 0) {
+      const span = document.createElement('span');
+      span.className = 'count';
+      span.textContent = `(${count})`;
+      btn.appendChild(span);
+    }
+  });
+}
+
+function renderOrders() {
   const tbody = $('#orderTableBody');
   const empty = $('#orderEmpty');
   tbody.innerHTML = '';
-  if (error) { say('Siparişler yüklenirken hata: ' + error.message); return; }
-  if (!data || data.length === 0) { empty.style.display = 'block'; return; }
+  const filtered = orderFilter === 'all' ? allOrdersCache : allOrdersCache.filter(o => (o.order_status||'pending') === orderFilter);
+  if (!filtered || filtered.length === 0) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  data.forEach(o => {
+  filtered.forEach(o => {
     const tr = document.createElement('tr');
-    const items = (o.items || []).map(i => `${i.name} x${i.qty || 1}`).join(', ');
     const status = o.order_status || 'pending';
-    const statusOptions = ['pending','paid','shipped'].map(s => `<option value="${s}" ${status===s?'selected':''}>${s==='pending'?'Bekliyor':s==='paid'?'Ödeme Alındı':'Kargoya Verildi'}</option>`).join('');
+    const statusText = {pending:'Bekliyor',paid:'Ödeme Alındı',shipped:'Kargoya Verildi',completed:'Tamamlandı'};
+    const statusOptions = Object.entries(statusText).map(([k,v]) => `<option value="${k}" ${status===k?'selected':''}>${v}</option>`).join('');
+    const itemRows = (o.items || []).map(i => {
+      const img = productImageMap[i.name];
+      const imgTag = img ? `<img src="${img}" class="order-item-img" alt="">` : '';
+      return `${imgTag}${i.name} x${i.qty||1}`;
+    }).join('<br>');
     tr.innerHTML = `
       <td><strong style="color:#a85d38">${o.order_number || '-'}</strong></td>
       <td>${new Date(o.created_at).toLocaleDateString('tr-TR')} ${new Date(o.created_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}</td>
-      <td style="max-width:200px;white-space:normal">${items}</td>
+      <td style="max-width:220px;white-space:normal;font-size:12px;line-height:1.6">${itemRows}</td>
       <td><strong>${o.total ? Number(o.total).toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</strong></td>
       <td>${o.customer_name || '-'}</td>
       <td style="font-size:11px">${o.customer_email || ''}${o.customer_phone ? '<br>'+o.customer_phone : ''}</td>
@@ -609,14 +673,20 @@ async function deleteOrder(id) {
   if (!confirm('Bu siparişi silmek istediğinize emin misiniz?')) return;
   const { error } = await _sb.from('orders').delete().eq('id', id);
   if (error) { say('Silme hatası: ' + error.message); return; }
+  allOrdersCache = allOrdersCache.filter(o => o.id !== id);
+  updateFilterCounts();
+  renderOrders();
   say('Sipariş silindi.');
-  loadOrders();
 }
 
 /* ========== UPDATE ORDER STATUS ========== */
 async function updateOrderStatus(id, status) {
   const { error } = await _sb.from('orders').update({ order_status: status }).eq('id', id);
   if (error) { say('Güncelleme hatası: ' + error.message); return; }
+  const idx = allOrdersCache.findIndex(o => o.id === id);
+  if (idx >= 0) allOrdersCache[idx].order_status = status;
+  updateFilterCounts();
+  renderOrders();
   say('Durum güncellendi.');
 }
 
