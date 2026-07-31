@@ -71,7 +71,12 @@
     .filter-btn.active{background:#292622;color:#fff;border-color:#292622}
     .filter-btn .count{font-size:10px;margin-left:4px;opacity:.7}
 
-    .order-item-img{width:36px;height:36px;border-radius:4px;object-fit:cover;margin-right:4px;vertical-align:middle;border:1px solid #e5e0d9}
+    .order-item-img{width:36px;height:36px;border-radius:4px;object-fit:cover;margin-right:4px;vertical-align:middle;border:1px solid #e5e0d9;cursor:pointer;transition:.2s}
+    .order-item-img:hover{transform:scale(1.15);border-color:#a85d38}
+
+    .img-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:none;place-items:center;cursor:pointer}
+    .img-lightbox.open{display:grid}
+    .img-lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
 
     .actions-cell{display:flex;gap:6px}
     .actions-cell button{border:0;padding:5px 12px;border-radius:5px;font:inherit;font-size:11px;cursor:pointer;transition:.15s}
@@ -246,6 +251,11 @@
 
     </div>
   </div>
+</div>
+
+<!-- IMAGE LIGHTBOX -->
+<div class="img-lightbox" id="imgLightbox" onclick="closeImgLightbox()">
+  <img id="imgLightboxImg" src="" alt="">
 </div>
 
 <!-- MODAL -->
@@ -648,7 +658,7 @@ function renderOrders() {
     const statusOptions = Object.entries(statusText).map(([k,v]) => `<option value="${k}" ${status===k?'selected':''}>${v}</option>`).join('');
     const itemRows = (o.items || []).map(i => {
       const img = productImageMap[i.name];
-      const imgTag = img ? `<img src="${img}" class="order-item-img" alt="">` : '';
+      const imgTag = img ? `<img src="${img}" class="order-item-img" alt="" onclick="event.stopPropagation();openImgLightbox('${img}')">` : '';
       return `${imgTag}${i.name} x${i.qty||1}`;
     }).join('<br>');
     tr.innerHTML = `
@@ -714,6 +724,15 @@ $('#saveSettingsBtn').onclick = async () => {
   s.textContent = '✅ Kaydedildi.';
   setTimeout(() => s.textContent = '', 2500);
 };
+
+/* ========== IMAGE LIGHTBOX ========== */
+function openImgLightbox(src) {
+  $('#imgLightboxImg').src = src;
+  $('#imgLightbox').classList.add('open');
+}
+function closeImgLightbox() {
+  $('#imgLightbox').classList.remove('open');
+}
 
 /* ========== INIT ========== */
 checkAuth();
