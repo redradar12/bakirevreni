@@ -17,19 +17,26 @@ p{font-size:14px;color:#555;line-height:1.5;margin-bottom:20px}
 .btn{display:inline-block;padding:12px 32px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;background:#292622;transition:background .2s}
 .btn:hover{background:#a85d38}
 .loading{color:#888}
+.debug{font-size:11px;color:#999;margin-top:16px;border-top:1px solid #eee;padding-top:10px;text-align:left;word-break:break-all}
 </style>
 </head>
 <body>
 <div class="card" id="resultCard">
   <div class="loading" id="statusMsg">Ödeme sonucu kontrol ediliyor...</div>
+  <div class="debug" id="debugInfo"></div>
 </div>
 <script>
 (async()=>{
+  const card=document.getElementById('resultCard');
+  const msg=document.getElementById('statusMsg');
+  const dbg=document.getElementById('debugInfo');
+  function log(s){if(dbg)dbg.innerHTML+=s+'<br>'}
+
   const p=new URLSearchParams(location.search);
   const token=p.get('token');
   const status=p.get('status');
-  const card=document.getElementById('resultCard');
-  const msg=document.getElementById('statusMsg');
+  log('URL:'+location.search);
+  log('token:'+(token?'var':'yok')+' status:'+(status||'yok'));
 
   if(!token||status==='failure'){
     card.innerHTML='<div class="icon fail">✕</div><h2>Ödeme Başarısız</h2><p>İşlem tamamlanamadı. Lütfen tekrar deneyin.</p><a class="btn" href="./">Ana Sayfaya Dön</a>';
@@ -42,78 +49,105 @@ p{font-size:14px;color:#555;line-height:1.5;margin-bottom:20px}
   let verified=false;
   let paymentId='';
 
-  // Try Edge Function verification first
+  // Try Edge Function verification with 6s timeout
+  msg.textContent='Ödeme doğrulanıyor...';
+  log('Edge Function deneniyor...');
   try{
+    const ctrl=new AbortController();
+    const tmr=setTimeout(()=>ctrl.abort(),6000);
     const r=await fetch(SB_URL+'/functions/v1/iyzico-checkout-result',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
-      body:JSON.stringify({token})
+      body:JSON.stringify({token}),
+      signal:ctrl.signal
     });
+    clearTimeout(tmr);
+    log('Edge Function cevap:'+r.status);
     if(r.ok){
       const j=await r.json();
+      log('Edge Function data:'+JSON.stringify(j).substring(0,200));
       if(j.status==='success'){
         verified=true;
         paymentId=j.paymentId||j.conversationId||'';
-        // If payment failed on iyzico side, show failure
         if(j.paymentStatus==='FAILURE'){
+          log('iyzico FAILURE');
           card.innerHTML='<div class="icon fail">✕</div><h2>Ödeme Başarısız</h2><p>İşlem tamamlanamadı. Lütfen tekrar deneyin.</p><a class="btn" href="./">Ana Sayfaya Dön</a>';
           return;
         }
       }
     }
   }catch(e){
-    // Edge Function might not be deployed — treat as success since iyzico redirects only on success
-    console.log('checkout-result not available, saving order anyway');
+    log('Edge Function hata:'+(e.name||'')+' '+(e.message||'').substring(0,100));
   }
 
-  // Save order from sessionStorage (always attempt on success redirect)
+  // Get cart from sessionStorage, fallback to localStorage
+  msg.textContent='Sipariş kaydediliyor...';
   let cart=[],buyer={};
   try{
-    const c=sessionStorage.getItem('pendingCart');
-    const b=sessionStorage.getItem('pendingBuyer');
-    if(c)cart=JSON.parse(c);
-    if(b)buyer=JSON.parse(b);
-  }catch(e){}
-  if(cart.length){
-    const items=cart.map(i=>({name:i.name,price:i.price,qty:i.qty||1}));
-    let total=items.reduce((s,i)=>s+i.price*i.qty,0);
-    let couponDsc=0;
-    try{const cd=sessionStorage.getItem('pendingCoupon');if(cd)couponDsc=parseInt(cd)}catch(e){}
-    if(couponDsc)total=total*(100-couponDsc)/100;
-    try{
-      let orderNumber='';
-      try{
-        const onr=await fetch(SB_URL+'/rest/v1/rpc/get_next_order_number',{
-          method:'POST',
-          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}
-        });
-        if(onr.ok)orderNumber=await onr.json();
-      }catch(e){}
-      await fetch(SB_URL+'/rest/v1/orders',{
-        method:'POST',
-        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body:JSON.stringify({
-          order_number:orderNumber||null,
-          items,total,
-          customer_name:buyer.name||buyer.email||'',
-          customer_email:buyer.email||'',
-          customer_phone:buyer.phone||'',
-          customer_address:buyer.address||'',
-          customer_city:buyer.city||'',
-          customer_district:buyer.district||'',
-          customer_province:buyer.province||'',
-          payment_id:paymentId||token||'',
-          payment_status:verified?'success':'pending_verify',
-          payment_method:'iyzico',
-          order_status:'pending',
-          note:buyer.note||null
-        })
-      });
-    }catch(e){}
-    sessionStorage.removeItem('pendingCart');
-    sessionStorage.removeItem('pendingBuyer');
-    sessionStorage.removeItem('pendingCoupon');
+    let c=sessionStorage.getItem('pendingCart');
+    let b=sessionStorage.getItem('pendingBuyer');
+    if(!c){c=localStorage.getItem('pendingCart');log('sessionStorage bos, localStorage denendi')}
+    if(!b){b=localStorage.getItem('pendingBuyer')}
+    if(c){cart=JSON.parse(c);log('cart:'+cart.length+' urun')}
+    else{log('cart bos!')}
+    if(b){buyer=JSON.parse(b);log('buyer:'+(buyer.name||buyer.email||'yok'))}
+    else{log('buyer bos!')}
+  }catch(e){log('parse hata:'+e.message)}
+
+  if(!cart.length){
+    log('Kritik: sepet verisi yok, siparis kaydedilemedi!');
+    card.innerHTML='<div class="icon fail">✕</div><h2>Sipariş Hatası</h2><p>Sepet bilgisi bulunamadı. Ödemeniz alınmış olabilir, lütfen bizimle iletişime geçin.</p><a class="btn" href="./">Ana Sayfaya Dön</a>';
+    return;
   }
+
+  const items=cart.map(i=>({name:i.name,price:i.price,qty:i.qty||1}));
+  let total=items.reduce((s,i)=>s+i.price*i.qty,0);
+  let couponDsc=0;
+  try{const cd=sessionStorage.getItem('pendingCoupon');if(cd)couponDsc=parseInt(cd)}catch(e){}
+  if(couponDsc)total=total*(100-couponDsc)/100;
+  log('toplam:'+total.toFixed(2)+' TL');
+
+  try{
+    let orderNumber='';
+    try{
+      const onr=await fetch(SB_URL+'/rest/v1/rpc/get_next_order_number',{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}
+      });
+      if(onr.ok){orderNumber=await onr.json();log('siparis no:'+orderNumber)}
+      else log('siparis no alinamadi:'+onr.status)
+    }catch(e){log('siparis no hata:'+e.message)}
+
+    const saveRes=await fetch(SB_URL+'/rest/v1/orders',{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({
+        order_number:orderNumber||null,
+        items,total,
+        customer_name:buyer.name||buyer.email||'',
+        customer_email:buyer.email||'',
+        customer_phone:buyer.phone||'',
+        customer_address:buyer.address||'',
+        customer_city:buyer.city||'',
+        customer_district:buyer.district||'',
+        customer_province:buyer.province||'',
+        payment_id:paymentId||token||'',
+        payment_status:verified?'success':'pending_verify',
+        payment_method:'iyzico',
+        order_status:'pending',
+        note:buyer.note||null
+      })
+    });
+    log('DB kayit:'+saveRes.status);
+  }catch(e){log('DB hata:'+e.message)}
+
+  sessionStorage.removeItem('pendingCart');
+  sessionStorage.removeItem('pendingBuyer');
+  sessionStorage.removeItem('pendingCoupon');
+  localStorage.removeItem('pendingCart');
+  localStorage.removeItem('pendingBuyer');
+  localStorage.removeItem('pendingCoupon');
+
   card.innerHTML='<div class="icon ok">✓</div><h2>Ödeme Başarılı!</h2><p>Siparişiniz alındı. En kısa sürede kargoya verilecektir.</p><a class="btn" href="./">Ana Sayfaya Dön</a>';
 })();
 </script>
