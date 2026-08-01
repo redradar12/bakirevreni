@@ -135,7 +135,7 @@ p{font-size:14px;color:#555;line-height:1.5;margin-bottom:20px}
         payment_id:paymentId||token||'',
         payment_status:verified?'success':'pending_verify',
         payment_method:'iyzico',
-        order_status:'pending',
+        order_status:verified?'paid':'pending',
         note:buyer.note||null
       })
     });
