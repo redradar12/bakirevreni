@@ -61,7 +61,7 @@ serve(async (req) => {
       currency: 'TRY',
       basketId,
       paymentGroup: 'PRODUCT',
-      callbackUrl: callbackUrl || 'https://example.com/callback',
+      callbackUrl: 'https://xjmyqadcqpaxlbpfnzja.supabase.co/functions/v1/iyzico-checkout-result',
       enabledInstallments: [1, 2, 3, 6, 9],
       buyer: {
         id: email,
