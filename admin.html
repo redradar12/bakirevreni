@@ -120,6 +120,43 @@
     .upload-btn input{position:absolute;opacity:0;width:0;height:0}
     .upload-spinner{display:inline-block;width:14px;height:14px;border:2px solid #ded8d0;border-top-color:#a85d38;border-radius:50%;animation:spin .6s linear}
     @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Mobile order cards */
+    .order-cards{display:none;flex-direction:column;gap:14px;margin-top:4px}
+    .order-card{background:#fff;border:1px solid #e5e0d9;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .order-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:12px}
+    .order-card-header strong{color:#a85d38;font-size:14px;word-break:break-all}
+    .order-card-header small{color:#9d958e;font-size:11px;flex-shrink:0}
+    .order-card-section{margin-bottom:12px}
+    .order-card-section:last-child{margin-bottom:0}
+    .order-card-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#7a736c;font-weight:700;margin-bottom:5px}
+    .order-card-value{font-size:13px;color:#23201d;line-height:1.5}
+    .order-card-items{display:flex;flex-direction:column;gap:8px}
+    .order-card-item{display:flex;align-items:center;gap:10px;font-size:13px}
+    .order-card-item img{width:40px;height:40px;border-radius:5px;object-fit:cover;border:1px solid #e5e0d9;cursor:pointer;transition:.2s}
+    .order-card-item img:hover{transform:scale(1.1);border-color:#a85d38}
+    .order-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid #f0ece6;gap:12px;flex-wrap:wrap}
+    .order-card-actions{display:flex;gap:8px;align-items:center}
+    .order-card-actions button{border:0;padding:7px 14px;border-radius:6px;font:inherit;font-size:12px;cursor:pointer;transition:.15s}
+    .order-card-actions .delete{background:#fce8e6;color:#c0392b}
+    .order-card-actions .delete:hover{background:#f8d7d4}
+    .order-card-status{font-size:12px;padding:4px 8px;border-radius:5px;border:1px solid #ded8d0;background:#f9f7f3}
+    .order-card-note{margin-top:10px;padding:10px;background:#fff8f0;border-radius:6px;font-size:12px;color:#6b4c30;line-height:1.4}
+
+    @media(max-width:760px){
+      .admin-body{flex-direction:column}
+      .admin-sidebar{width:100%;border-right:0;border-bottom:1px solid #e5e0d9;display:flex;flex-wrap:wrap;gap:0;padding:8px 0}
+      .admin-sidebar a{flex:1;min-width:90px;justify-content:center;padding:10px 6px;border-right:0;border-bottom:3px solid transparent;font-size:12px}
+      .admin-sidebar a.active{border-right-color:transparent;border-bottom-color:#a85d38}
+      .admin-content{padding:20px 16px}
+      .page-header{margin-bottom:16px}
+      .page-header h2{font-size:18px}
+      .order-filters{gap:6px;margin-bottom:12px}
+      .filter-btn{padding:6px 12px;font-size:11px}
+      .table-wrap table{display:none}
+      .order-cards{display:flex}
+      .modal{padding:24px}
+    }
   </style>
 </head>
 <body>
@@ -233,6 +270,7 @@
             <thead><tr><th>Sipariş No</th><th>Tarih</th><th>Ürünler</th><th>Toplam</th><th>Müşteri</th><th>İletişim</th><th>Adres</th><th>Ödeme</th><th>Durum</th><th>İşlem</th></tr></thead>
             <tbody id="orderTableBody"></tbody>
           </table>
+          <div class="order-cards" id="orderCards"></div>
           <div class="empty" id="orderEmpty">Henüz sipariş yok.</div>
         </div>
       </div>
@@ -649,36 +687,80 @@ function updateFilterCounts() {
 
 function renderOrders() {
   const tbody = $('#orderTableBody');
+  const cards = $('#orderCards');
   const empty = $('#orderEmpty');
   tbody.innerHTML = '';
+  if (cards) cards.innerHTML = '';
   const filtered = orderFilter === 'all' ? allOrdersCache : allOrdersCache.filter(o => (o.order_status||'pending') === orderFilter);
   if (!filtered || filtered.length === 0) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
+  const statusText = {pending:'Bekliyor',paid:'Ödeme Alındı',shipped:'Kargoya Verildi',completed:'Tamamlandı'};
   filtered.forEach(o => {
-    const tr = document.createElement('tr');
     const status = o.order_status || 'pending';
-    const statusText = {pending:'Bekliyor',paid:'Ödeme Alındı',shipped:'Kargoya Verildi',completed:'Tamamlandı'};
     const statusOptions = Object.entries(statusText).map(([k,v]) => `<option value="${k}" ${status===k?'selected':''}>${v}</option>`).join('');
     const itemRows = (o.items || []).map(i => {
       const img = productImageMap[i.name];
       const imgTag = img ? `<img src="${img}" class="order-item-img" alt="" onclick="event.stopPropagation();openImgLightbox('${img}')">` : '';
       return `${imgTag}${i.name} x${i.qty||1}`;
     }).join('<br>');
+    const dateStr = `${new Date(o.created_at).toLocaleDateString('tr-TR')} ${new Date(o.created_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}`;
+    const contact = `${o.customer_email || ''}${o.customer_phone ? (o.customer_email ? '<br>' : '') + o.customer_phone : ''}`;
+    const address = `${o.customer_address || ''}${o.customer_district ? ' '+o.customer_district : ''}${o.customer_province ? '/'+o.customer_province : ''}${o.customer_city ? ', '+o.customer_city : ''}`;
+    // desktop table row
+    const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><strong style="color:#a85d38">${o.order_number || '-'}</strong></td>
-      <td>${new Date(o.created_at).toLocaleDateString('tr-TR')} ${new Date(o.created_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${dateStr}</td>
       <td style="max-width:220px;white-space:normal;font-size:12px;line-height:1.6">${itemRows}</td>
       <td><strong>${o.total ? Number(o.total).toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</strong></td>
       <td>${o.customer_name || '-'}</td>
-      <td style="font-size:11px">${o.customer_email || ''}${o.customer_phone ? '<br>'+o.customer_phone : ''}</td>
-      <td style="font-size:11px;max-width:180px;white-space:normal">${o.customer_address || ''}${o.customer_district ? ' '+o.customer_district : ''}${o.customer_province ? '/'+o.customer_province : ''}${o.customer_city ? ', '+o.customer_city : ''}</td>
+      <td style="font-size:11px">${contact}</td>
+      <td style="font-size:11px;max-width:180px;white-space:normal">${address}</td>
       <td><span class="badge-pill ${o.payment_method==='havale'?'seller':'new'}">${o.payment_method==='havale'?'Havale':'iyzico'}</span></td>
       <td><select class="status-select" data-id="${o.id}" style="font-size:11px;padding:3px 6px;border-radius:4px;border:1px solid #ded8d0">${statusOptions}</select></td>
       <td class="actions-cell"><button class="delete" data-id="${o.id}">Sil</button>${o.note ? `<span title="${o.note.replace(/"/g,'&quot;')}" style="cursor:help;font-size:11px;color:#7a736c;margin-left:4px">&#x1F4DD;</span>` : ''}</td>`;
     tbody.appendChild(tr);
+    // mobile card
+    if (cards) {
+      const card = document.createElement('div');
+      card.className = 'order-card';
+      const cardItems = (o.items || []).map(i => {
+        const img = productImageMap[i.name];
+        const imgTag = img ? `<img src="${img}" alt="" onclick="event.stopPropagation();openImgLightbox('${img}')">` : '';
+        return `<div class="order-card-item">${imgTag}<span>${i.name} x${i.qty||1}</span></div>`;
+      }).join('');
+      card.innerHTML = `
+        <div class="order-card-header"><strong>${o.order_number || '-'}</strong><small>${dateStr}</small></div>
+        <div class="order-card-section">
+          <div class="order-card-label">Ürünler</div>
+          <div class="order-card-items">${cardItems || '<span style="color:#9d958e;font-size:12px">—</span>'}</div>
+        </div>
+        <div class="order-card-section">
+          <div class="order-card-label">Toplam</div>
+          <div class="order-card-value"><strong>${o.total ? Number(o.total).toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</strong></div>
+        </div>
+        <div class="order-card-section">
+          <div class="order-card-label">Müşteri</div>
+          <div class="order-card-value">${o.customer_name || '-'}<br>${contact}</div>
+        </div>
+        <div class="order-card-section">
+          <div class="order-card-label">Adres</div>
+          <div class="order-card-value">${address || '-'}</div>
+        </div>
+        <div class="order-card-section">
+          <div class="order-card-label">Ödeme</div>
+          <div class="order-card-value"><span class="badge-pill ${o.payment_method==='havale'?'seller':'new'}">${o.payment_method==='havale'?'Havale':'iyzico'}</span></div>
+        </div>
+        ${o.note ? `<div class="order-card-note"><b>Not:</b> ${o.note.replace(/</g,'&lt;').replace(/"/g,'&quot;')}</div>` : ''}
+        <div class="order-card-footer">
+          <select class="status-select order-card-status" data-id="${o.id}">${statusOptions}</select>
+          <div class="order-card-actions"><button class="delete" data-id="${o.id}">Sil</button></div>
+        </div>`;
+      cards.appendChild(card);
+    }
   });
-  tbody.querySelectorAll('.delete').forEach(b => b.onclick = () => deleteOrder(b.dataset.id));
-  tbody.querySelectorAll('.status-select').forEach(s => s.onchange = () => updateOrderStatus(s.dataset.id, s.value));
+  document.querySelectorAll('#orderTableBody .delete, #orderCards .delete').forEach(b => b.onclick = () => deleteOrder(b.dataset.id));
+  document.querySelectorAll('#orderTableBody .status-select, #orderCards .status-select').forEach(s => s.onchange = () => updateOrderStatus(s.dataset.id, s.value));
 }
 
 /* ========== DELETE ORDER ========== */
