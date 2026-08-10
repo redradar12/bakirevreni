@@ -456,10 +456,20 @@ async function loadCategories() {
 
 $('#addCatBtn').onclick = () => openCategoryModal(null);
 
+function slugify(text) {
+  const map = {ç:'c',ğ:'g',ı:'i',ö:'o',ş:'s',ü:'u',Ç:'C',Ğ:'G',I:'I',Ö:'O',Ş:'S',Ü:'U'};
+  return text.toLowerCase()
+    .replace(/[çğıöşüÇĞIÖŞÜ]/g, c => map[c] || c)
+    .replace(/\s+/g,'-')
+    .replace(/[^a-z0-9-]/g,'')
+    .replace(/-+/g,'-')
+    .replace(/^-|-$/g,'');
+}
+
 async function openCategoryModal(id) {
   editingId = id || null;
   editingType = 'category';
-  let cat = { name: '', group_name: '', image_url: '' };
+  let cat = { name: '', group_name: '', image_url: '', slug: '' };
   if (id) {
     const { data } = await _sb.from('categories').select('*').eq('id', id).single();
     if (data) cat = data;
@@ -469,29 +479,39 @@ async function openCategoryModal(id) {
     <h3>${id ? 'Kategori Düzenle' : 'Yeni Kategori'}</h3>
     <div class="field"><label>Kategori Adı</label><input id="fCatName" value="${cat.name}"></div>
     <div class="field"><label>Grup Adı</label><input id="fCatGroup" value="${cat.group_name}" placeholder="İçecek &amp; Kahve"></div>
+    <div class="field"><label>Slug (URL'de görünen)</label><input id="fCatSlug" value="${cat.slug || ''}" placeholder="ornek-kategori"></div>
     <div class="field"><label>Görsel</label><div class="upload-row"><input id="fCatImg" value="${cat.image_url || ''}" placeholder="assets/ornek.jpg"><button type="button" class="upload-btn" onclick="var el=document.getElementById('fCatUp');if(el)el.click()"><span>📷</span> Resim Seç<input type="file" accept="image/*" id="fCatUp" onchange="uploadFile('fCatUp','fCatImg')" hidden></button></div></div>
     <div class="modal-actions">
       <button class="cancel" onclick="closeModal()">İptal</button>
       <button class="primary" id="saveCatBtn">Kaydet</button>
     </div>`;
   $('#modalOverlay').classList.add('open');
+  $('#fCatName').oninput = () => {
+    const slugInput = $('#fCatSlug');
+    if (!editingId || slugInput.dataset.userEdited !== '1') {
+      slugInput.value = slugify($('#fCatName').value);
+    }
+  };
+  $('#fCatSlug').oninput = () => { $('#fCatSlug').dataset.userEdited = '1'; };
   $('#saveCatBtn').onclick = saveCategory;
 }
 
 async function saveCategory() {
   const nameVal = $('#fCatName').value.trim();
+  let slugVal = ($('#fCatSlug') && $('#fCatSlug').value.trim()) || '';
+  if (!slugVal) slugVal = slugify(nameVal);
   const data = {
     name: nameVal,
     group_name: $('#fCatGroup').value.trim(),
-    image_url: $('#fCatImg').value.trim() || null
+    image_url: $('#fCatImg').value.trim() || null,
+    slug: slugVal
   };
-  // Only generate and set slug for NEW categories. Do not overwrite slug on edits to avoid breaking existing links.
-  const generatedSlug = nameVal.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
   if (!data.name) { say('Kategori adı gerekli.'); return; }
+  if (!data.slug) { say('Slug gerekli.'); return; }
 
   const { error } = editingId
     ? await _sb.from('categories').update(data).eq('id', editingId)
-    : await _sb.from('categories').insert(Object.assign({}, data, { slug: generatedSlug }));
+    : await _sb.from('categories').insert(data);
 
   closeModal();
   if (error) { say('Hata: ' + error.message); return; }
