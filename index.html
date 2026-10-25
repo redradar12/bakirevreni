@@ -120,6 +120,19 @@ footer .footer-bottom{grid-column:1/-1;margin-top:18px;padding-top:19px;border-t
 
     <section class="feature-strip"><div><b>El işçiliği</b><span>Özenle üretilir</span></div><div><b>Güvenli ödeme</b><span>iyzico altyapısı ile</span></div><div><b>Ücretsiz kargo</b><span>Tüm Türkiye'ye</span></div><div><b>Kolay iade</b><span>14 gün içinde</span></div></section>
 
+    <section class="film" id="atolye">
+      <div class="film-head">
+        <div><p class="eyebrow copper">ATÖLYEDEN</p><h2>Bakır, ateşle<br><i>hayat bulur</i>.</h2></div>
+        <p class="film-lead">Tezgâhımızdan yükselen çekiç sesleri, bakırın ateşle buluştuğu anlar ve üç kuşaktır süren zanaatın perde arkası.</p>
+      </div>
+      <button class="film-frame" type="button" data-video="aRjODio10SE" aria-label="Bakır Evreni atölye videosunu oynat">
+        <img src="assets/video-poster.jpg" alt="Bakır ustasının atölyede bakır işlemesi" loading="lazy" width="1280" height="720">
+        <span class="film-shade"></span>
+        <span class="film-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>
+        <span class="film-caption">BAKIR EVRENİ ATÖLYESİ <span>GAZİANTEP</span></span>
+      </button>
+    </section>
+
     <section class="products section" id="urunler"><div class="section-head"><div><p class="eyebrow copper">EN ÇOK SATANLAR</p><h2>Çok Satanlar</h2></div><a href="tum-urunler.html" class="text-link">Tümünü incele <span>→</span></a></div>
       <div class="product-grid" id="productGrid"></div></section>
 
@@ -220,7 +233,7 @@ footer .footer-bottom{grid-column:1/-1;margin-top:18px;padding-top:19px;border-t
 </aside>
 <div id="productModal" class="pm-overlay"><div class="pm-box"><button class="pm-close">×</button><div class="pm-grid"><div class="pm-media"><span class="pm-badge"></span><div class="pm-img-wrap"><img class="pm-img"><div class="pm-gallery"></div></div><div class="pm-thumbs"></div></div><div class="pm-body"><p class="pm-type"></p><div style="display:flex;align-items:center;gap:8px"><h2 class="pm-name"></h2><button id="pmShareBtn" class="pm-share" title="Linki kopyala" style="background:none;border:1px solid #ded8d0;border-radius:6px;padding:3px 7px;font-size:12px;cursor:pointer;flex-shrink:0">🔗</button></div><div class="pm-rating"><span class="pm-stars">★★★★★</span><span class="pm-reviews-count">Yorumlar</span></div><div class="pm-price-row"><p class="pm-price"></p><span class="pm-discount"></span></div><p class="pm-havale"><span>Havale ile %5 indirim</span></p><p class="pm-short"></p><p class="pm-desc-title">Ürün Açıklaması</p><p class="pm-desc"></p><div class="pm-qty-row"><span class="pm-qty-label">Adet</span><button class="pm-qty-btn" data-dir="-">−</button><input class="pm-qty" type="number" value="1" min="1" max="99"><button class="pm-qty-btn" data-dir="+">+</button></div><button class="pm-add">Sepete ekle</button><div class="pm-reviews"><p class="pm-desc-title">Değerlendirmeler</p><div class="pm-review-list"></div><div class="pm-review-form"><div class="pm-star-pick"><button class="pm-star" data-v="1">★</button><button class="pm-star" data-v="2">★</button><button class="pm-star" data-v="3">★</button><button class="pm-star" data-v="4">★</button><button class="pm-star" data-v="5">★</button></div><div class="pm-review-fields"><input class="pm-review-name" placeholder="Adınız" maxlength="60"><textarea class="pm-review-comment" placeholder="Yorumunuzu yazın…" maxlength="600" rows="2"></textarea><button class="pm-review-submit">Gönder</button></div><span class="pm-review-msg"></span></div></div><ul class="pm-assurance"><li><span class="pm-ic">🚚</span><div><b>Ücretsiz Kargo</b><small>Tüm Türkiye</small></div></li><li><span class="pm-ic">🛡️</span><div><b>Güvenli Ödeme</b><small>iyzico ile</small></div></li><li><span class="pm-ic">↩️</span><div><b>Kolay İade</b><small>14 gün içinde</small></div></li></ul></div></div></div></div><div class="success-overlay" id="successModal"><div class="success-box"><div class="check">✓</div><h2>Ödeme Başarılı!</h2><p>Siparişiniz alındı. En kısa sürede kargoya verilecektir.</p><button class="sbtn" onclick="document.getElementById('successModal').classList.remove('open')">Tamam</button></div></div>
   <div class="search-modal" id="searchModal"><button class="close" data-close>×</button><label for="searchInput">Ne arıyorsunuz?</label><input id="searchInput" autocomplete="off" placeholder="Ürün ara..." /><div id="searchResults" class="search-results"></div><p>Örneğin: cezve, matara, semaver, bardak</p></div><div class="toast" id="toast"></div>
-  <script src="./script.js?v=2"></script>
+  <script src="./script.js?v=3"></script>
   <script>
     // Show top 8 bestsellers in the SEÇKİN PARÇALAR section
     loadProducts("products?select=*&badge=eq.%C3%87OK%20SATAN&limit=16");

@@ -109,3 +109,20 @@ function setupReviewForm(m,pid){
 $on('#productModal','onclick',function(e){if(e.target===this||e.target.classList.contains('pm-close')){this.classList.remove('open');if(overlay)overlay.classList.remove('show');history.replaceState(null,'',window.location.pathname+window.location.search)}});
 $on('.pm-add','onclick',function(){const qty=parseInt($('#productModal').querySelector('.pm-qty').value)||1;for(let i=0;i<qty;i++)addToCart(this.dataset.product,parseFloat(this.dataset.price));$('#productModal').classList.remove('open');if(overlay)overlay.classList.remove('show')});document.querySelectorAll('.pm-qty-btn').forEach(b=>b.onclick=function(){const inp=this.parentElement.querySelector('.pm-qty');let v=parseInt(inp.value)||1;v+=this.dataset.dir==='+'?1:-1;if(v<1)v=1;if(v>99)v=99;inp.value=v});$on('#applyCouponBtn','onclick',()=>{const code=($('#couponInput')&&$('#couponInput').value||'').trim();if(code==='BAKİREVRENİ5'&&!window._cp){window._cp=true;updateTotal();updateCartBar();say('Kupon kodu uygulandı: %5 indirim!');$('#couponInput').disabled=true;$('#applyCouponBtn').textContent='✓ Uygulandı';$('#applyCouponBtn').disabled=true}else if(window._cp){say('Kupon zaten uygulanmış.')}else{say('Geçersiz kupon kodu.')}});$on('#pmShareBtn','onclick',e=>{e.stopPropagation();const url=window.location.href;navigator.clipboard.writeText(url).then(()=>say('Ürün linki kopyalandı!')).catch(()=>{const t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);say('Link kopyalandı!')})});(function(){const h=window.location.hash;if(h.startsWith('#urun=')){const id=decodeURIComponent(h.slice(6));sbGet('products?id=eq.'+encodeURIComponent(id)).then(p=>{if(p&&p.length){window._pd=window._pd||{};window._pd[id]=p[0];showProduct(id)}})}})();
 drawCart();
+/* Atölye videosu: poster tıklanınca YouTube oynatıcısı yüklenir */
+document.querySelectorAll('.film-frame[data-video]').forEach(function(frame){
+  frame.addEventListener('click',function(){
+    var id=frame.getAttribute('data-video');
+    if(!id||frame.classList.contains('is-playing'))return;
+    var box=document.createElement('div');
+    box.className='film-frame is-playing';
+    var iframe=document.createElement('iframe');
+    iframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0&modestbranding=1';
+    iframe.title='Bakır Evreni atölye videosu';
+    iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen=true;
+    iframe.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
+    box.appendChild(iframe);
+    frame.replaceWith(box);
+  });
+});
