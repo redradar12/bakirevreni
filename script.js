@@ -109,20 +109,52 @@ function setupReviewForm(m,pid){
 $on('#productModal','onclick',function(e){if(e.target===this||e.target.classList.contains('pm-close')){this.classList.remove('open');if(overlay)overlay.classList.remove('show');history.replaceState(null,'',window.location.pathname+window.location.search)}});
 $on('.pm-add','onclick',function(){const qty=parseInt($('#productModal').querySelector('.pm-qty').value)||1;for(let i=0;i<qty;i++)addToCart(this.dataset.product,parseFloat(this.dataset.price));$('#productModal').classList.remove('open');if(overlay)overlay.classList.remove('show')});document.querySelectorAll('.pm-qty-btn').forEach(b=>b.onclick=function(){const inp=this.parentElement.querySelector('.pm-qty');let v=parseInt(inp.value)||1;v+=this.dataset.dir==='+'?1:-1;if(v<1)v=1;if(v>99)v=99;inp.value=v});$on('#applyCouponBtn','onclick',()=>{const code=($('#couponInput')&&$('#couponInput').value||'').trim();if(code==='BAKİREVRENİ5'&&!window._cp){window._cp=true;updateTotal();updateCartBar();say('Kupon kodu uygulandı: %5 indirim!');$('#couponInput').disabled=true;$('#applyCouponBtn').textContent='✓ Uygulandı';$('#applyCouponBtn').disabled=true}else if(window._cp){say('Kupon zaten uygulanmış.')}else{say('Geçersiz kupon kodu.')}});$on('#pmShareBtn','onclick',e=>{e.stopPropagation();const url=window.location.href;navigator.clipboard.writeText(url).then(()=>say('Ürün linki kopyalandı!')).catch(()=>{const t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);say('Link kopyalandı!')})});(function(){const h=window.location.hash;if(h.startsWith('#urun=')){const id=decodeURIComponent(h.slice(6));sbGet('products?id=eq.'+encodeURIComponent(id)).then(p=>{if(p&&p.length){window._pd=window._pd||{};window._pd[id]=p[0];showProduct(id)}})}})();
 drawCart();
-/* Atölye videosu: poster tıklanınca YouTube oynatıcısı yüklenir */
+/* Atölye videosu: bölüm görünür olunca sessiz otomatik oynat */
 document.querySelectorAll('.film-frame[data-video]').forEach(function(frame){
-  frame.addEventListener('click',function(){
+  var started=false;
+  function startVideo(){
+    if(started)return;
+    started=true;
     var id=frame.getAttribute('data-video');
-    if(!id||frame.classList.contains('is-playing'))return;
+    if(!id)return;
     var box=document.createElement('div');
     box.className='film-frame is-playing';
     var iframe=document.createElement('iframe');
-    iframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0&modestbranding=1';
+    var origin=location.protocol.indexOf('http')===0?'&origin='+encodeURIComponent(location.origin):'';
+    iframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1'+origin;
     iframe.title='Bakır Evreni atölye videosu';
     iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
     iframe.allowFullscreen=true;
     iframe.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
+    var unmute=document.createElement('button');
+    unmute.type='button';
+    unmute.className='film-unmute';
+    unmute.disabled=true;
+    unmute.setAttribute('aria-label','Videonun sesini aç');
+    unmute.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06a9 9 0 0 0 0-17.54z"/></svg><span>Sesi aç</span>';
+    iframe.addEventListener('load',function(){unmute.disabled=false;});
+    unmute.addEventListener('click',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      try{
+        iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":[]}','*');
+        iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[80]}','*');
+      }catch(err){}
+      unmute.remove();
+    });
     box.appendChild(iframe);
+    box.appendChild(unmute);
     frame.replaceWith(box);
-  });
+  }
+  frame.addEventListener('click',startVideo);
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){startVideo();io.disconnect();}
+      });
+    },{threshold:0.35});
+    io.observe(frame);
+  }else{
+    startVideo();
+  }
 });
