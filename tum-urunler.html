@@ -71,7 +71,7 @@
       <div class="cart-sum-row"><span>Ara Toplam</span><span id="totalPrice">0 TL</span></div>
       <div class="cart-sum-row free"><span>Kargo</span><span>Ücretsiz</span></div>
       <div class="cart-sum-row havale-row2" id="havaleDiscount" style="display:none"><span>Havale indirimi</span><span>−%5</span></div>
-      <div class="cart-sum-row havale-row2" id="couponDiscount" style="display:none"><span>Kupon indirimi</span><span>−%5</span></div>
+      <div class="cart-sum-row havale-row2" id="couponDiscount" style="display:none"><span>Kupon indirimi</span><span id="couponDiscountVal">-%0</span></div>
       <div class="cart-sum-row total"><span>Genel Toplam</span><span id="grandTotal">0 TL</span></div>
     </div>
     <button class="checkout" id="checkoutBtn"><span>Ödemeye geç</span><i class="ch-arrow">→</i></button>
@@ -112,7 +112,7 @@
   <div class="search-modal" id="searchModal"><button class="close" data-close>×</button><label for="searchInput">Ne arıyorsunuz?</label><input id="searchInput" autocomplete="off" placeholder="Ürün ara..." /><div id="searchResults" class="search-results"></div><p>Örneğin: cezve, matara, semaver, bardak</p></div>
   <div class="toast" id="toast"></div>
 
-  <script src="./script.js?v=2"></script>
+  <script src="./script.js?v=5"></script>
   <script>
   (async()=>{
     const params=new URLSearchParams(location.search);

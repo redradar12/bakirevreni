@@ -97,6 +97,31 @@ CREATE POLICY "Ayarları admin yönetir" ON settings
     auth.role() = 'authenticated'
   );
 
+-- KUPONLAR TABLOSU
+CREATE TABLE IF NOT EXISTS coupons (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  code text NOT NULL UNIQUE,
+  discount_percent numeric(5,2) NOT NULL CHECK (discount_percent > 0 AND discount_percent <= 99),
+  active boolean NOT NULL DEFAULT true,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Kuponlar herkese açık" ON coupons;
+CREATE POLICY "Kuponlar herkese açık" ON coupons
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Kuponları admin yönetir" ON coupons;
+CREATE POLICY "Kuponları admin yönetir" ON coupons
+  FOR ALL USING (
+    auth.role() = 'authenticated'
+  );
+
+-- Mevcut kupon (eski sabit kod) korunur
+INSERT INTO coupons (code, discount_percent, active) VALUES ('BAKIREVRENI5', 5, true)
+ON CONFLICT (code) DO NOTHING;
+
 -- STORAGE: Resim yükleme havuzu
 INSERT INTO storage.buckets (id, name, public) VALUES ('bakir', 'bakir', true)
 ON CONFLICT (id) DO NOTHING;

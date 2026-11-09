@@ -6,12 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info, x-iyzi-rnd',
 }
 
+const normalizeCoupon = (s: unknown) =>
+  String(s || '').trim().toUpperCase()
+    .replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ğ/g, 'G')
+    .replace(/Ü/g, 'U').replace(/Ö/g, 'O').replace(/Ç/g, 'C')
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders })
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: corsHeaders })
 
   try {
-    const { cart, buyer, callbackUrl } = await req.json()
+    const { cart, buyer, callbackUrl, coupon } = await req.json()
     const apiKey = Deno.env.get('IYZICO_API_KEY')
     const secretKey = Deno.env.get('IYZICO_SECRET_KEY')
     if (!apiKey || !secretKey) {
@@ -25,7 +30,41 @@ serve(async (req) => {
       })
     }
 
-    const total = cart.reduce((s: number, i: { price: number; qty?: number }) => s + Number(i.price) * (i.qty || 1), 0)
+    const subtotal = cart.reduce((s: number, i: { price: number; qty?: number }) => s + Number(i.price) * (i.qty || 1), 0)
+    if (subtotal <= 0) {
+      return new Response(JSON.stringify({ status: 'failure', errorMessage: 'Geçersiz tutar.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    let discountPercent = 0
+    const couponCode = String(coupon || '').trim()
+    if (couponCode) {
+      const couponBase = Deno.env.get('SUPABASE_URL') || ''
+      const couponKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || ''
+      if (couponBase && couponKey) {
+        try {
+          const couponRes = await fetch(`${couponBase}/rest/v1/coupons?active=eq.true&select=code,discount_percent`, {
+            headers: { apikey: couponKey, Authorization: 'Bearer ' + couponKey },
+          })
+          if (couponRes.ok) {
+            const rows = await couponRes.json()
+            const found = Array.isArray(rows)
+              ? rows.find((r: { code: string }) => normalizeCoupon(r.code) === normalizeCoupon(couponCode))
+              : null
+            const pct = found ? Number(found.discount_percent) : 0
+            if (pct > 0 && pct <= 99) discountPercent = pct
+          }
+        } catch (_) { /* aşağıdaki geçersiz kupon hatasına düşer */ }
+      }
+      if (!discountPercent) {
+        return new Response(JSON.stringify({ status: 'failure', errorMessage: 'Kupon geçersiz veya pasif.' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    const total = Math.round(subtotal * (100 - discountPercent)) / 100
     if (total <= 0) {
       return new Response(JSON.stringify({ status: 'failure', errorMessage: 'Geçersiz tutar.' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -52,6 +91,23 @@ serve(async (req) => {
     const address = buyer?.address || 'Belirtilmedi'
     const city = buyer?.city || 'Istanbul'
     const contactName = firstName + ' ' + lastName
+
+    let allocated = 0
+    const basketItems = cart.map((i: { id?: string; name: string; price: number; qty?: number }, idx: number) => {
+      const qty = Number(i.qty) || 1
+      const isLast = idx === cart.length - 1
+      const linePrice = isLast
+        ? Math.round((total - allocated) * 100) / 100
+        : Math.floor(Number(i.price) * qty * (100 - discountPercent)) / 100
+      allocated = Math.round((allocated + linePrice) * 100) / 100
+      return {
+        id: i.id || String(idx + 1),
+        name: i.name || 'Urun',
+        category1: 'Genel',
+        itemType: 'PHYSICAL',
+        price: linePrice.toFixed(2),
+      }
+    })
 
     const payment = {
       locale: 'tr',
@@ -90,13 +146,7 @@ serve(async (req) => {
         address,
         zipCode: '34000',
       },
-      basketItems: cart.map((i: { id?: string; name: string; price: number; qty?: number }, idx: number) => ({
-        id: i.id || String(idx + 1),
-        name: i.name || 'Urun',
-        category1: 'Genel',
-        itemType: 'PHYSICAL',
-        price: (Number(i.price) * (i.qty || 1)).toFixed(2),
-      })),
+      basketItems,
     }
 
     const isSandbox = Deno.env.get('IYZICO_SANDBOX') === 'true'
@@ -136,7 +186,7 @@ serve(async (req) => {
       status: result.status === 'success' ? 200 : 400,
     })
   } catch (e) {
-    return new Response(JSON.stringify({ status: 'failure', errorMessage: String(e?.message || e) }), {
+    return new Response(JSON.stringify({ status: 'failure', errorMessage: String((e as Error)?.message || e) }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

@@ -200,6 +200,7 @@
       <a href="#" data-page="categories">📁 Kategoriler</a>
       <a href="#" data-page="products">📦 Ürünler</a>
       <a href="#" data-page="orders">📋 Siparişler</a>
+      <a href="#" data-page="coupons">🎟️ Kuponlar</a>
       <a href="#" data-page="settings">⚙️ Ayarlar</a>
     </nav>
     <div class="admin-content">
@@ -274,6 +275,21 @@
           </table>
           <div class="order-cards" id="orderCards"></div>
           <div class="empty" id="orderEmpty">Henüz sipariş yok.</div>
+        </div>
+      </div>
+
+      <!-- COUPONS -->
+      <div class="page" id="page-coupons">
+        <div class="page-header">
+          <h2>Kuponlar</h2>
+          <button class="btn" id="addCouponBtn">+ Yeni Kupon</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Kupon Kodu</th><th>İndirim</th><th>Durum</th><th>İşlem</th></tr></thead>
+            <tbody id="couponTableBody"></tbody>
+          </table>
+          <div class="empty" id="couponEmpty">Henüz kupon eklenmemiş.</div>
         </div>
       </div>
 
@@ -415,6 +431,7 @@ $$('.admin-sidebar a').forEach(a => {
     if (a.dataset.page === 'categories') loadCategories();
     if (a.dataset.page === 'products') loadProducts();
     if (a.dataset.page === 'orders') loadOrders();
+    if (a.dataset.page === 'coupons') loadCoupons();
     if (a.dataset.page === 'settings') loadSettings();
   };
 });
@@ -651,6 +668,83 @@ async function deleteProduct(id) {
   if (error) { say('Silme hatası: ' + error.message); return; }
   say('Ürün silindi.');
   loadProducts();
+}
+
+/* ========== COUPONS ========== */
+async function loadCoupons() {
+  const { data, error } = await _sb.from('coupons').select('*').order('created_at', { ascending: false });
+  const tbody = $('#couponTableBody');
+  const empty = $('#couponEmpty');
+  tbody.innerHTML = '';
+  if (error) { say('Kuponlar yüklenirken hata: ' + error.message); empty.textContent = 'Kuponlar yüklenemedi. Supabase SQL Editor\'da supabase-schema.sql dosyasını çalıştırın.'; empty.style.display = 'block'; return; }
+  if (!data || data.length === 0) { empty.textContent = 'Henüz kupon eklenmemiş.'; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  data.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${c.code}</strong></td>
+      <td>%${Number(c.discount_percent).toLocaleString('tr-TR')}</td>
+      <td><span class="badge-pill ${c.active ? 'new' : 'seller'}">${c.active ? 'Aktif' : 'Pasif'}</span></td>
+      <td class="actions-cell">
+        <button class="edit" data-id="${c.id}">Düzenle</button>
+        <button class="delete" data-id="${c.id}">Sil</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.edit').forEach(b => b.onclick = () => openCouponModal(b.dataset.id));
+  tbody.querySelectorAll('.delete').forEach(b => b.onclick = () => deleteCoupon(b.dataset.id));
+}
+
+$('#addCouponBtn').onclick = () => openCouponModal(null);
+
+async function openCouponModal(id) {
+  editingId = id || null;
+  editingType = 'coupon';
+  let c = { code: '', discount_percent: '', active: true };
+  if (id) {
+    const { data } = await _sb.from('coupons').select('*').eq('id', id).single();
+    if (data) c = data;
+  }
+  $('#modalContent').innerHTML = `
+    <h3>${id ? 'Kupon Düzenle' : 'Yeni Kupon'}</h3>
+    <div class="field"><label>Kupon Kodu</label><input id="fCouponCode" value="${String(c.code).replace(/"/g,'&quot;')}" placeholder="ORNEK10" style="text-transform:uppercase"></div>
+    <div class="field"><label>İndirim Oranı (%)</label><input id="fCouponPct" type="number" min="1" max="99" step="0.01" value="${c.discount_percent || ''}" placeholder="10"></div>
+    <div class="field"><label style="display:flex;align-items:center;gap:8px;text-transform:none;font-weight:400"><input type="checkbox" id="fCouponActive" ${c.active ? 'checked' : ''} style="width:auto"> Aktif</label></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">İptal</button>
+      <button class="primary" id="saveCouponBtn">Kaydet</button>
+    </div>`;
+  $('#modalOverlay').classList.add('open');
+  $('#saveCouponBtn').onclick = saveCoupon;
+}
+
+async function saveCoupon() {
+  const isEdit = !!editingId;
+  const code = String($('#fCouponCode').value || '').trim().toUpperCase()
+    .replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ğ/g, 'G')
+    .replace(/Ü/g, 'U').replace(/Ö/g, 'O').replace(/Ç/g, 'C');
+  const data = {
+    code,
+    discount_percent: parseFloat($('#fCouponPct').value),
+    active: $('#fCouponActive').checked
+  };
+  if (!data.code) { say('Kupon kodu gerekli.'); return; }
+  if (!(data.discount_percent > 0 && data.discount_percent <= 99)) { say('İndirim oranı 0 ile 99 arasında olmalı.'); return; }
+  const { error } = isEdit
+    ? await _sb.from('coupons').update(data).eq('id', editingId)
+    : await _sb.from('coupons').insert(data);
+  closeModal();
+  if (error) { say('Hata: ' + error.message); return; }
+  say(isEdit ? 'Kupon güncellendi.' : 'Kupon eklendi.');
+  loadCoupons();
+}
+
+async function deleteCoupon(id) {
+  if (!confirm('Bu kuponu silmek istediğinize emin misiniz?')) return;
+  const { error } = await _sb.from('coupons').delete().eq('id', id);
+  if (error) { say('Silme hatası: ' + error.message); return; }
+  say('Kupon silindi.');
+  loadCoupons();
 }
 
 /* ========== MODAL ========== */
